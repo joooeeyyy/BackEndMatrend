@@ -1,45 +1,35 @@
 package com.tekbridge.alertapp;
 
+import com.google.api.gax.core.CredentialsProvider;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.ImageAnnotatorSettings;
-import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @Configuration
 public class GoogleCredentialsConfig {
 
-    @PostConstruct
-    public void init() throws IOException {
-        String gcpCredsJson = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
-        if (gcpCredsJson == null || gcpCredsJson.isEmpty()) {
-            throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var not set");
+    @Bean
+    public ImageAnnotatorSettings imageAnnotatorSettings() throws Exception {
+        // Read the GOOGLE_APPLICATION_CREDENTIALS env var set in Railway
+        String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+        if (credentialsPath == null || credentialsPath.isEmpty()) {
+            throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS env var not set!");
         }
 
-        Files.write(
-                Paths.get("/tmp/service-account.json"),
-                gcpCredsJson.getBytes()
-        );
+        System.out.println("✅ Using GOOGLE_APPLICATION_CREDENTIALS at: " + credentialsPath);
 
-        System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/service-account.json");
-        System.out.println("✅ Wrote service account file and set system property.");
-    }
-
-    @Bean
-    public ImageAnnotatorSettings imageAnnotatorSettings() throws IOException {
-        try (InputStream credentialsStream =
-                     new FileInputStream("/tmp/service-account.json")) {
-
+        try (InputStream credentialsStream = new FileInputStream(credentialsPath)) {
             GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
 
+            CredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials);
+
             return ImageAnnotatorSettings.newBuilder()
-                    .setCredentialsProvider(() -> credentials)
+                    .setCredentialsProvider(credentialsProvider)
                     .build();
         }
     }
