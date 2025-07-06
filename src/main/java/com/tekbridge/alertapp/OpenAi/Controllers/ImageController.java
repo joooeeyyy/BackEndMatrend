@@ -423,7 +423,7 @@ public class ImageController {
             Graphics2D g = image.createGraphics();
 
             // Load logo image
-            BufferedImage logo = ImageIO.read(new File("C:/Joseph/logotest.png"));
+            //BufferedImage logo = ImageIO.read(new File("C:/Joseph/logotest.png"));
 
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             Font font = new Font("Arial", Font.BOLD, 50);
@@ -460,7 +460,7 @@ public class ImageController {
             int logoHeight = 250;
 
             // Draw the logo on the background
-            gCaption.drawImage(logo, xLogo, yLogo, logoWidth, logoHeight, null);
+           // gCaption.drawImage(logo, xLogo, yLogo, logoWidth, logoHeight, null);
 
             drawWrappedCaption(gCaption, removeCaption(caption), x, y2, maxWidth, padding, lineHeight);
             g.dispose();
