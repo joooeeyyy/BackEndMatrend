@@ -46,20 +46,20 @@ public class AlertappApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-
-		String gcpCredsJson = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
-		if (gcpCredsJson == null || gcpCredsJson.isEmpty()) {
-			throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var not set");
-		}
-
-		Files.write(
-				Paths.get("/tmp/service-account.json"),
-				gcpCredsJson.getBytes()
-		);
-
-		// ✅ Set the system property so Google SDKs can find it
-		System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/service-account.json");
-
+//
+//		String gcpCredsJson = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
+//		if (gcpCredsJson == null || gcpCredsJson.isEmpty()) {
+//			throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var not set");
+//		}
+//
+//		Files.write(
+//				Paths.get("/tmp/service-account.json"),
+//				gcpCredsJson.getBytes()
+//		);
+//
+//		// ✅ Set the system property so Google SDKs can find it
+//		System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/service-account.json");
+//
 
 		Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
 		Files.createDirectories(uploadDir);
