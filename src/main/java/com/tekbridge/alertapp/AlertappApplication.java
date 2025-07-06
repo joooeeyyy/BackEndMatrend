@@ -69,16 +69,13 @@ public class AlertappApplication implements CommandLineRunner {
 
 	@Bean
 	ImageAnnotatorSettings getAnnotatorSetting() throws IOException {
-		InputStream credentialsStream = AlertappApplication.class.getClassLoader()
-				.getResourceAsStream("service-account.json");
+		GoogleCredentials credentials;
+		try (InputStream credentialsStream =
+					 new FileInputStream("/tmp/service-account.json")) {
 
-		if (credentialsStream == null) {
-			System.out.println("Service Not found Found");
-			throw new RuntimeException("Service account JSON not found in resources!");
-		}else{
-			System.out.println("Service Found");
+	      credentials = GoogleCredentials.fromStream(credentialsStream);
 		}
-		GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+		//GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
 
 		// Build ImageAnnotatorSettings with credentials
 		ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
