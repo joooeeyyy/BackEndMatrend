@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.imageio.ImageIO;
@@ -106,84 +107,66 @@ public class ImageController {
     }
 
     @PostMapping("/imageGen")
-    public ResponseEntity<ResponseVideoPicture> imageGen(@RequestBody com.tekbridge.alertapp.Models.ImagePrompt imagePromptUser) throws Exception {
+    public ResponseEntity<ResponseVideoPicture> imageGen(
+            @RequestBody com.tekbridge.alertapp.Models.ImagePrompt imagePromptUser) throws Exception {
 
-        List<String> imageUrlS = new ArrayList<>();
-        List<BoundPolyAndDescription> boundPolyAndDescriptions = new ArrayList<>();
-        List<byte[]> bytesImage = new ArrayList<>();
+        List<String> resultPictures = new ArrayList<>();
 
         String parsedPrompt = imageGenerationService.getDetailsFromImagePrompt(imagePromptUser);
-        String videoDescription = "My Business is "+imagePromptUser.getWhatYouDo()+" business , Say the name "+imagePromptUser.getNameOfCompany()+" in various part of the video , with pictures indicating my services";
-        String instruction = "My Business is "+imagePromptUser.getWhatYouDo();
-        System.out.println("Gone Through "+parsedPrompt);
+        String videoDescription = "My Business is " + imagePromptUser.getWhatYouDo() +
+                " business, Say the name " + imagePromptUser.getNameOfCompany() +
+                " in various part of the video, with pictures indicating my services";
+        String instruction = "My Business is " + imagePromptUser.getWhatYouDo();
 
+        System.out.println("Gone Through " + parsedPrompt);
 
-       String firstString = generateTestUrl(parsedPrompt);
-       String secondString = generateTestUrl(parsedPrompt);
-       String thirdString = generateTestUrl(parsedPrompt);
-       String fourthString = generateTestUrl(parsedPrompt);
-       imageUrlS.add(firstString);
-       imageUrlS.add(secondString);
-       imageUrlS.add(thirdString);
-       imageUrlS.add(fourthString);
+        // generate test URLs
+        String[] generatedUrls = {
+                generateTestUrl(parsedPrompt),
+                generateTestUrl(parsedPrompt),
+                generateTestUrl(parsedPrompt),
+                generateTestUrl(parsedPrompt)
+        };
 
-       //TODO: Use the imageUrl To generate BoundPolyAndDescription
-        byte[] imageByte = getByteFromEachImage(firstString,imagePromptUser);
-        byte[] imageByte2 = getByteFromEachImage(secondString,imagePromptUser);
-        byte[] imageByte3 = getByteFromEachImage(thirdString,imagePromptUser);
-        byte[] imageByte4 = getByteFromEachImage(fourthString,imagePromptUser);
+        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 
+        // uploads directory
+        Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
+        Files.createDirectories(uploadDir);
 
-        String savePath = "C:/Joseph/test.png";
-        String savePath2 = "C:/Joseph/test1.png";
-        String savePath3 = "C:/Joseph/test2.png";
-        String savePath4 = "C:/Joseph/test3.png";
+        // save each image and build URLs
+        for (int i = 0; i < generatedUrls.length; i++) {
+            String generatedUrl = generatedUrls[i];
+            byte[] imageBytes = getByteFromEachImage(generatedUrl, imagePromptUser);
 
-        Files.write(Paths.get(savePath),imageByte);
-        Files.write(Paths.get(savePath2),imageByte2);
-        Files.write(Paths.get(savePath3),imageByte3);
-        Files.write(Paths.get(savePath4),imageByte4);
+            String fileName = "test" + (i == 0 ? "" : i) +System.currentTimeMillis()+ ".png";
+            Path savePath = uploadDir.resolve(fileName);
 
-        System.out.println("Image saved to: " + savePath);
-        Path path = Paths.get("C:/Joseph/test.png");
-        Path path1 = Paths.get("C:/Joseph/test1.png");
-        Path path2 = Paths.get("C:/Joseph/test2.png");
-        Path path3 = Paths.get("C:/Joseph/test3.png");
+            Files.write(savePath, imageBytes);
 
-        imageBytes = Files.readAllBytes(path);
-        imageBytes1 = Files.readAllBytes(path1);
-        imageBytes2 = Files.readAllBytes(path2);
-        imageBytes3 = Files.readAllBytes(path3);
-        System.out.println("Image loaded, access at: http://localhost:8081/image/test");
-        System.out.println("Image loaded, access at: http://localhost:8081/image/test1");
-        System.out.println("Image loaded, access at: http://localhost:8081/image/test2");
-        System.out.println("Image loaded, access at: http://localhost:8081/image/test3");
+            System.out.println("✅ Image saved to: " + savePath.toAbsolutePath());
 
+            // Add accessible URL
+
+            resultPictures.add(baseUrl + "/image/" + fileName);
+        }
+
+        resultPictures.forEach(url -> System.out.println("Image loaded, access at: " + url));
 
         VideoGenRequestModel videoGenRequestModel = new VideoGenRequestModel(
-                "Custom",
-                videoDescription,
-                instruction
+                "Custom", videoDescription, instruction
         );
 
-       Long value = requestVideoGeneration(videoGenRequestModel,"https://viralapi.vadoo.tv/api/generate_video");
-       Long valueInt = Long.parseLong(String.valueOf(value));
-       List<String> resultPictures = new ArrayList<>();
-       resultPictures.add("http://localhost:8081/image/test");
-       resultPictures.add("http://localhost:8081/image/test1");
-       resultPictures.add("http://localhost:8081/image/test2");
-       resultPictures.add("http://localhost:8081/image/test3");
+        Long videoId = requestVideoGeneration(videoGenRequestModel,
+                "https://viralapi.vadoo.tv/api/generate_video");
+
         ResponseVideoPicture responseVideoPicture = new ResponseVideoPicture(
-                valueInt,resultPictures
+                videoId, resultPictures
         );
-//        return ResponseEntity.ok()
-//                .header("Content-Disposition", "attachment; filename=\"image.png\"")
-//                .header("Content-Type", "image/png")
-//                .body(responseVideoPicture);
 
-        return ResponseEntity.ok()
-                .body(responseVideoPicture);
+        return ResponseEntity.ok(responseVideoPicture);
     }
+
 
     public Long requestVideoGeneration(
             VideoGenRequestModel videoGenRequest,

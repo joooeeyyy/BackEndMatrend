@@ -9,6 +9,7 @@ import org.springframework.ai.openai.OpenAiImageModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openai.api.OpenAiImageApi;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -26,6 +27,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,19 +37,20 @@ import java.util.List;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class AlertappApplication {
+public class AlertappApplication implements CommandLineRunner {
 
 
 	public static void main(String[] args) throws IOException {
-
-
-
-
-//		try (ImageAnnotatorClient client = ImageAnnotatorClient.create(settings)) {
-//			System.out.println("Client created successfully!");
-//		}
 		SpringApplication.run(AlertappApplication.class, args);
 	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
+		Files.createDirectories(uploadDir);
+		System.out.println("✅ Upload directory created at: " + uploadDir.toAbsolutePath());
+	}
+
 
 	@Bean
 	ImageAnnotatorSettings getAnnotatorSetting() throws IOException {
