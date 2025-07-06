@@ -67,22 +67,22 @@ public class AlertappApplication implements CommandLineRunner {
 	}
 
 
-	@Bean
-	ImageAnnotatorSettings getAnnotatorSetting() throws IOException {
-		GoogleCredentials credentials;
-		try (InputStream credentialsStream =
-					 new FileInputStream("/tmp/service-account.json")) {
-
-	      credentials = GoogleCredentials.fromStream(credentialsStream);
-		}
-		//GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
-
-		// Build ImageAnnotatorSettings with credentials
-		ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
-				.setCredentialsProvider(() -> credentials)
-				.build();
-		return settings;
-	}
+//	@Bean
+//	ImageAnnotatorSettings getAnnotatorSetting() throws IOException {
+//		GoogleCredentials credentials;
+//		try (InputStream credentialsStream =
+//					 new FileInputStream("/tmp/service-account.json")) {
+//
+//	      credentials = GoogleCredentials.fromStream(credentialsStream);
+//		}
+//		//GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+//
+//		// Build ImageAnnotatorSettings with credentials
+//		ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
+//				.setCredentialsProvider(() -> credentials)
+//				.build();
+//		return settings;
+//	}
 
 	@Bean
 	public RestTemplate restTemplate() {
