@@ -15,22 +15,23 @@ public class GoogleCredentialsConfig {
 
     @Bean
     public ImageAnnotatorSettings imageAnnotatorSettings() throws Exception {
+
         // Read the GOOGLE_APPLICATION_CREDENTIALS env var set in Railway
-        String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-        if (credentialsPath == null || credentialsPath.isEmpty()) {
-            throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS env var not set!");
+        InputStream credentialsStream = getClass()
+                .getClassLoader()
+                .getResourceAsStream("service-account.json");
+
+        if (credentialsStream == null) {
+            throw new IllegalStateException("service-account.json not found in resources!");
         }
 
-        System.out.println("✅ Using GOOGLE_APPLICATION_CREDENTIALS at: " + credentialsPath);
+        GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
 
-        try (InputStream credentialsStream = new FileInputStream(credentialsPath)) {
-            GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
 
-            CredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials);
+        CredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials);
 
-            return ImageAnnotatorSettings.newBuilder()
-                    .setCredentialsProvider(credentialsProvider)
-                    .build();
-        }
+        return ImageAnnotatorSettings.newBuilder()
+                .setCredentialsProvider(credentialsProvider)
+                .build();
     }
 }
