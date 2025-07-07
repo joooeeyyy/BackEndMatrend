@@ -164,7 +164,7 @@ public class ImageController {
             // Add accessible URL
 
 
-            resultPictures.add(baseUrl + "/image/" + fileName);
+            resultPictures.add(baseUrl + "/" + fileName);
         }
 
         resultPictures.forEach(url -> System.out.println("Image loaded, access at: " + url));
