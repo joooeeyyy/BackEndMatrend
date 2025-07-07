@@ -42,9 +42,24 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Controller
 public class ImageController {
 
+    private final Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
     HttpHeaders httpHeaders;
     RestTemplate restTemplate;
     OpenAiImageModel imageModel;
@@ -148,6 +163,7 @@ public class ImageController {
 
             // Add accessible URL
 
+
             resultPictures.add(baseUrl + "/image/" + fileName);
         }
 
@@ -167,6 +183,32 @@ public class ImageController {
         return ResponseEntity.ok(responseVideoPicture);
     }
 
+    @GetMapping("/{filename:.+}")
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
+        try {
+            Path filePath = uploadDir.resolve(filename).normalize();
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource resource = new UrlResource(filePath.toUri());
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (MalformedURLException ex) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     public Long requestVideoGeneration(
             VideoGenRequestModel videoGenRequest,
@@ -249,16 +291,16 @@ public class ImageController {
     }
 
     // Serve image as byte[] when URL is hit
-    @GetMapping("/image/test")
-    public ResponseEntity<byte[]> getImage() {
-        if (imageBytes == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_PNG)
-                .body(imageBytes);
-    }
+//    @GetMapping("/image/test")
+//    public ResponseEntity<byte[]> getImage() {
+//        if (imageBytes == null) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.IMAGE_PNG)
+//                .body(imageBytes);
+//    }
 
     @GetMapping("/image/test1")
     public ResponseEntity<byte[]> getImage4() {
