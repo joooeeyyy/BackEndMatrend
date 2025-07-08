@@ -84,7 +84,7 @@ public class FirebaseConfig {
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setStorageBucket("matrend-c45ab.firebasestorage.app") // replace with your actual bucket
+                        .setStorageBucket("matrend-c45ab.appspot.com") // replace with your actual bucket
                         .build();
 
                 return FirebaseApp.initializeApp(options);
