@@ -27,6 +27,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Configuration
 public class FirebaseConfig {
@@ -66,23 +69,30 @@ public class FirebaseConfig {
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            try (InputStream serviceAccount =
-                         new FileInputStream("/tmp/service-account.json")) {
 
-                if (serviceAccount == null) {
-                    throw new IllegalStateException("serviceAccountKey.json not found in resources!");
-                }
+            // Read JSON credentials from environment variable
+            String json = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
+            if (json == null || json.isEmpty()) {
+                throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var is not set!");
+            }
+
+            // Write to /tmp/service-account.json
+            Path tempPath = Paths.get("/tmp/service-account.json");
+            Files.writeString(tempPath, json);
+
+            try (InputStream serviceAccount = new FileInputStream(tempPath.toFile())) {
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setStorageBucket("your-bucket-name.appspot.com")
+                        .setStorageBucket("matrend-c45ab.firebasestorage.app") // replace with your actual bucket
                         .build();
 
                 return FirebaseApp.initializeApp(options);
             }
 
         } else {
-            return FirebaseApp.getInstance(); // reuse existing
+            return FirebaseApp.getInstance(); // reuse existing instance
         }
     }
+
 }
