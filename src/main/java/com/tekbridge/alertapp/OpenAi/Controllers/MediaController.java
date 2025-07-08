@@ -9,26 +9,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/media")
-public class MediaController {
-
-    private final MediaService mediaService;
-
-    @Autowired
-    public MediaController(MediaService mediaService) {
-        this.mediaService = mediaService;
-    }
-
-    @PostMapping("/refresh/{uid}")
-    public org.springframework.http.ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
-        try {
-            mediaService.refreshMediaStatuses(uid);
-            return ResponseEntity.ok("Content refreshed successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to refresh: " + e.getMessage());
-        }
-    }
-}
-
+//@RestController
+//@RequestMapping("/media")
+public class MediaController {}
+//
+//    private final MediaService mediaService;
+//
+//    @Autowired
+//    public MediaController(MediaService mediaService) {
+//        this.mediaService = mediaService;
+//    }
+//
+//    @PostMapping("/refresh/{uid}")
+//    public org.springframework.http.ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
+//        try {
+//            mediaService.refreshMediaStatuses(uid);
+//            return ResponseEntity.ok("Content refreshed successfully.");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Failed to refresh: " + e.getMessage());
+//        }
+//    }
+//}
+//
