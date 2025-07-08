@@ -130,8 +130,8 @@ public class ImageController {
 
     }
 
-    @PostMapping("/refresh/{uid}")
-    public org.springframework.http.ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
+    @GetMapping("/refresh/{uid}")
+    public ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
         try {
             mediaService.refreshMediaStatuses(uid);
             return ResponseEntity.ok("Content refreshed successfully.");
