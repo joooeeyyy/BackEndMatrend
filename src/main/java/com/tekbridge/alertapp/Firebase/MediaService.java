@@ -132,7 +132,7 @@ public class MediaService {
         }
     }
 
-    public StatusOfVideo fetchUpdatedVideoInfo(int videoId) {
+    public StatusOfVideo fetchUpdatedVideoInfo(Long videoId) {
         // 🔷 TODO: call your backend API and map to StatusOfVideo
         return new StatusOfVideo("completed", "https://example.com/video.mp4");
     }
