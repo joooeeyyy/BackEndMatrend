@@ -30,8 +30,6 @@ import java.nio.file.Path;
 @Service
 public class FirebaseUploader {
 
-    @Value("${firebase.storage.bucket}")
-    private String firebaseBucket;
 
     public String uploadVideoToFirebaseFromUrlAndUpdate(String videoUrl, MediaDisplay media) throws Exception {
         // 1️⃣ Download video to temp file
@@ -40,7 +38,7 @@ public class FirebaseUploader {
         // 2️⃣ Upload to Firebase Storage
         String firebasePath = "videos/video_" + System.currentTimeMillis() + ".mp4";
 
-        Bucket bucket = StorageClient.getInstance().bucket(firebaseBucket);
+        Bucket bucket = StorageClient.getInstance().bucket("matrend-c45ab.firebasestorage.app");
         Blob blob = bucket.create(firebasePath, Files.newInputStream(tempFile), "video/mp4");
 
         // Optional: make the file public
