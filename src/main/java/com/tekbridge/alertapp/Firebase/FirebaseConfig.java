@@ -2,6 +2,7 @@ package com.tekbridge.alertapp.Firebase;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,65 +35,39 @@ import java.nio.file.Paths;
 @Configuration
 public class FirebaseConfig {
 
-
     @Bean
-    public Firestore firestore() throws IOException {
-
-        try (InputStream serviceAccount =
-            new FileInputStream("/tmp/service-account.json")) {
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setStorageBucket("matrend-c45ab.firebasestorage.app")
-                        .build();
-
-                FirebaseApp.initializeApp(options);
-            }
-
-        }
-        return FirestoreClient.getFirestore();
-    }
-
-    @Bean
-    public Storage storage() throws Exception {
-
-        try (InputStream serviceAccount =
-                     new FileInputStream("/tmp/service-account.json")) {
-
-            return StorageOptions.newBuilder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build()
-                    .getService();
-        }
-    }
-
-    @Bean
-    public FirebaseApp initializeFirebase() throws IOException {
+    public FirebaseApp firebaseApp() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-
-            // Read JSON credentials from environment variable
             String json = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
             if (json == null || json.isEmpty()) {
                 throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var is not set!");
             }
 
-            // Write to /tmp/service-account.json
             Path tempPath = Paths.get("/tmp/service-account.json");
-            Files.writeString(tempPath, json);
+            if (!Files.exists(tempPath)) {
+                Files.writeString(tempPath, json);
+            }
 
             try (InputStream serviceAccount = new FileInputStream(tempPath.toFile())) {
-
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setStorageBucket("matrend-c45ab.appspot.com") // replace with your actual bucket
+                        .setStorageBucket("matrend-c45ab.appspot.com") // ✅ correct bucket
                         .build();
 
                 return FirebaseApp.initializeApp(options);
             }
-
         } else {
-            return FirebaseApp.getInstance(); // reuse existing instance
+            return FirebaseApp.getInstance();
         }
     }
 
+    @Bean
+    public Firestore firestore(FirebaseApp firebaseApp) {
+        return FirestoreClient.getFirestore(firebaseApp);
+    }
+
+    @Bean
+    public Storage storage(FirebaseApp firebaseApp) {
+        return StorageClient.getInstance(firebaseApp).bucket().getStorage();
+    }
 }
