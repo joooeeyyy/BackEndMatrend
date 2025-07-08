@@ -207,14 +207,16 @@ public class ImageController {
                 videoId, resultPictures
         );
 
-        MediaDisplay media = MediaDisplay.builder()
-                .videoId(videoId.intValue())
-                .videoUrl("")
-                .pictures(resultPictures)
-                .statusPending(true)
-                .userId(uid)
-                .businessName(imagePromptUser.getNameOfCompany())
-                .build();
+        System.out.println("Company Name" +imagePromptUser.getNameOfCompany());
+        System.out.println("Video Id "+videoId);
+        MediaDisplay media = new MediaDisplay(
+                videoId,
+                "",
+                resultPictures,
+                true,
+               uid,
+                imagePromptUser.getNameOfCompany()
+                );
 
         saveMediaToFirestore(uid, media);
 

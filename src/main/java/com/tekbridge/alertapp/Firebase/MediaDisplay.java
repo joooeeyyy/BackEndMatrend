@@ -13,7 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MediaDisplay {
-    private int videoId;
+    private Long videoId;
     private String videoUrl;
     private List<String> pictures;
     private boolean statusPending;
@@ -33,7 +33,7 @@ public class MediaDisplay {
 
     public static MediaDisplay fromMap(Map<String, Object> map) {
         return MediaDisplay.builder()
-                .videoId((int) map.get("videoId"))
+                .videoId((Long) map.get("videoId"))
                 .videoUrl((String) map.get("videoUrl"))
                 .pictures((List<String>) map.get("pictures"))
                 .statusPending((boolean) map.get("statusPending"))
