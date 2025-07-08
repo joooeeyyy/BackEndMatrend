@@ -38,12 +38,12 @@ public class FirebaseConfig {
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            String json = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON");
+            String json = System.getenv("Firebase_JSON");
             if (json == null || json.isEmpty()) {
                 throw new IllegalStateException("GOOGLE_APPLICATION_CREDENTIALS_JSON env var is not set!");
             }
 
-            Path tempPath = Paths.get("/tmp/service-account.json");
+            Path tempPath = Paths.get("/tmp/serviceaccount.json");
             if (!Files.exists(tempPath)) {
                 Files.writeString(tempPath, json);
             }
