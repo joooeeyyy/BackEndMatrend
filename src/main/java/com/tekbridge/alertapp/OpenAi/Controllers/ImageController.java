@@ -12,6 +12,7 @@ import com.tekbridge.alertapp.Models.VideoGenRequestModel;
 import com.tekbridge.alertapp.Models.WordBox;
 import com.tekbridge.alertapp.Servcies.BoundPolyAndDescription;
 import com.tekbridge.alertapp.Servcies.ImageGenerationService.ImageGenerationService;
+import com.tekbridge.alertapp.Servcies.MediaService;
 import com.tekbridge.alertapp.Servcies.TextDetectionService;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -61,6 +62,8 @@ import java.nio.file.Paths;
 @Controller
 public class ImageController {
 
+    private final MediaService mediaService;
+
     private final Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
     HttpHeaders httpHeaders;
     RestTemplate restTemplate;
@@ -82,7 +85,8 @@ public class ImageController {
 
 
     @Autowired
-    public ImageController(RestTemplate restTemplate,TextDetectionService detectionService , OpenAiImageModel imageModel,ImageGenerationService imageGenerationService,HttpHeaders httpHeaders) {
+    public ImageController(MediaService mediaService,RestTemplate restTemplate,TextDetectionService detectionService , OpenAiImageModel imageModel,ImageGenerationService imageGenerationService,HttpHeaders httpHeaders) {
+        this.mediaService=mediaService;
         this.imageModel = imageModel;
         this.imageGenerationService=imageGenerationService;
         this.detectionService = detectionService;
@@ -126,7 +130,16 @@ public class ImageController {
 
     }
 
-
+    @PostMapping("/refresh/{uid}")
+    public org.springframework.http.ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
+        try {
+            mediaService.refreshMediaStatuses(uid);
+            return ResponseEntity.ok("Content refreshed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to refresh: " + e.getMessage());
+        }
+    }
 
     public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
         DocumentReference userDoc = firestore.collection("users").document(uid);
