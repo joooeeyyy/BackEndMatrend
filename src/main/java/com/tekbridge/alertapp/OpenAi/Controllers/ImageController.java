@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.vision.v1.BoundingPoly;
 import com.google.cloud.vision.v1.Word;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
+import com.tekbridge.alertapp.Firebase.MediaDisplay;
 import com.tekbridge.alertapp.Models.ResponseVideoPicture;
 import com.tekbridge.alertapp.Models.VideoGenRequestModel;
 import com.tekbridge.alertapp.Models.WordBox;
@@ -22,14 +25,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.FieldValue;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.WriteResult;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -48,8 +52,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -73,6 +75,9 @@ public class ImageController {
     byte[] imageBytes1;
     byte[] imageBytes2;
     byte[] imageBytes3;
+
+    @Autowired
+    private Firestore firestore;
 
 
 
@@ -121,10 +126,32 @@ public class ImageController {
 
     }
 
+
+
+    public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
+        DocumentReference userDoc = firestore.collection("users").document(uid);
+
+        Map<String, Object> mediaMap = media.toMap();
+
+        ApiFuture<WriteResult> result = userDoc.update("media", FieldValue.arrayUnion(mediaMap));
+
+        result.get(); // wait for completion
+
+        System.out.println("✅ Media saved to Firestore for user: " + uid);
+    }
     @PostMapping("/imageGen")
     public ResponseEntity<ResponseVideoPicture> imageGen(
+            @RequestHeader("Authorization") String authorization,
             @RequestBody com.tekbridge.alertapp.Models.ImagePrompt imagePromptUser) throws Exception {
+        // Remove "Bearer " prefix
+        String idToken = authorization.replace("Bearer ", "").trim();
 
+        System.out.println("Token Gotten yesss "+authorization+idToken);
+        // Verify the token with Firebase Admin SDK
+        FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+
+        // Get the UID of the authenticated user
+        String uid = decodedToken.getUid();
         List<String> resultPictures = new ArrayList<>();
 
         String parsedPrompt = imageGenerationService.getDetailsFromImagePrompt(imagePromptUser);
@@ -179,6 +206,17 @@ public class ImageController {
         ResponseVideoPicture responseVideoPicture = new ResponseVideoPicture(
                 videoId, resultPictures
         );
+
+        MediaDisplay media = MediaDisplay.builder()
+                .videoId(videoId.intValue())
+                .videoUrl("")
+                .pictures(resultPictures)
+                .statusPending(true)
+                .userId(uid)
+                .businessName(imagePromptUser.getNameOfCompany())
+                .build();
+
+        saveMediaToFirestore(uid, media);
 
         return ResponseEntity.ok(responseVideoPicture);
     }

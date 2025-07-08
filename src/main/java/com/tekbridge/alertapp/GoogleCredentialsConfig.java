@@ -19,10 +19,30 @@ import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Configuration
 public class GoogleCredentialsConfig {
+
+//    @PostConstruct
+//    public void init() throws Exception {
+//        InputStream resourceStream = getClass()
+//                .getClassLoader()
+//                .getResourceAsStream("serviceAccountKey.json");
+//
+//        if (resourceStream == null) {
+//            throw new IllegalStateException("serviceAccountKey.json not found in resources folder!");
+//        }
+//
+//        String tmpDir = System.getProperty("java.io.tmpdir");
+//        Path tmpPath = Paths.get(tmpDir, "service-account.json");
+//
+//        Files.copy(resourceStream, tmpPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+//
+//        System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", tmpPath.toString());
+//        System.out.println("✅ Loaded serviceAccountKey.json from resources and set system property to: " + tmpPath);
+//    }
 
     // At startup, write the JSON from env var to a file
     @PostConstruct
@@ -50,4 +70,23 @@ public class GoogleCredentialsConfig {
                     .build();
         }
     }
+
+//    @Bean
+//    public ImageAnnotatorSettings imageAnnotatorSettings() throws Exception {
+//        try (InputStream credentialsStream =
+//                     getClass().getClassLoader().getResourceAsStream("serviceAccountKey.json")) {
+//
+//            if (credentialsStream == null) {
+//                throw new IllegalStateException("serviceAccountKey.json not found in resources folder!");
+//            }
+//
+//            GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
+//            CredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials);
+//
+//            return ImageAnnotatorSettings.newBuilder()
+//                    .setCredentialsProvider(credentialsProvider)
+//                    .build();
+//        }
+//    }
+
 }
