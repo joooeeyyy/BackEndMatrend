@@ -51,7 +51,7 @@ public class FirebaseConfig {
             try (InputStream serviceAccount = new FileInputStream(tempPath.toFile())) {
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setStorageBucket("matrend-c45ab.appspot.com") // ✅ correct bucket
+                        .setStorageBucket("matrend-c45ab.firebasestorage.app") // ✅ correct bucket
                         .build();
 
                 return FirebaseApp.initializeApp(options);
