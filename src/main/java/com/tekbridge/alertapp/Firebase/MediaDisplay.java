@@ -1,9 +1,6 @@
 package com.tekbridge.alertapp.Firebase;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;
@@ -12,11 +9,14 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class MediaDisplay {
     private Long videoId;
     private String videoUrl;
     private List<String> pictures;
     private boolean statusPending;
+    private boolean isUploading;
     private String userId;
     private String businessName;
 
@@ -26,6 +26,7 @@ public class MediaDisplay {
                 "videoUrl", videoUrl,
                 "pictures", pictures,
                 "statusPending", statusPending,
+                "isUploading", isUploading,
                 "userId", userId,
                 "businessName", businessName
         );
@@ -37,9 +38,9 @@ public class MediaDisplay {
                 .videoUrl((String) map.get("videoUrl"))
                 .pictures((List<String>) map.get("pictures"))
                 .statusPending((boolean) map.get("statusPending"))
+                .isUploading((boolean) map.get("isUploading"))
                 .userId((String) map.get("userId"))
                 .businessName((String) map.get("businessName"))
                 .build();
     }
 }
-

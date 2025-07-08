@@ -214,6 +214,7 @@ public class ImageController {
                 "",
                 resultPictures,
                 true,
+                false,
                uid,
                 imagePromptUser.getNameOfCompany()
                 );
