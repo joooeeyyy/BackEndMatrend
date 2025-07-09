@@ -41,7 +41,8 @@ public class MediaService {
         for (Map<String, Object> mediaMap : mediaListRaw) {
             MediaDisplay media = MediaDisplay.fromMap(mediaMap);
 
-            if (media.isStatusPending()) {
+            if (media.isStatusPending() && !media.isUploading()) {
+                media.setIsUploading(true);
                 VideoStatus updatedStatus = videoStatusService.fetchUpdatedVideoInfo(
                         media.getVideoId(), media);
 
