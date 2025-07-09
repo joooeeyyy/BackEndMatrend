@@ -55,6 +55,7 @@ public class MediaService {
                     media.setStatusPending(false);
                     media.setVideoUrl(firebaseUrl);
                     updatedList.add(media.toMap());
+                    userDoc.update("media", updatedList);
                 } else {
                     updatedList.add(media.toMap());
                 }
