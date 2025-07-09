@@ -48,12 +48,12 @@ public class MediaService {
 
                 if ("completed".equals(updatedStatus.getStatus())) {
                      media.setUploading(true);
+                     updatedList.add(media.toMap());
+                     userDoc.update("media", updatedList);
                     String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
                             updatedStatus.getUrl(), media);
-
                     media.setStatusPending(false);
                     media.setVideoUrl(firebaseUrl);
-
                     updatedList.add(media.toMap());
                 } else {
                     updatedList.add(media.toMap());
