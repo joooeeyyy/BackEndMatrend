@@ -42,7 +42,7 @@ public class MediaService {
             MediaDisplay media = MediaDisplay.fromMap(mediaMap);
 
             if (media.isStatusPending() && !media.isUploading()) {
-                media.setIsUploading(true);
+                media.setUploading(true);
                 VideoStatus updatedStatus = videoStatusService.fetchUpdatedVideoInfo(
                         media.getVideoId(), media);
 
