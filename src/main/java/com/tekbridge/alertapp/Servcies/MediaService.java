@@ -42,16 +42,16 @@ public class MediaService {
             MediaDisplay media = MediaDisplay.fromMap(mediaMap);
 
             if (media.isStatusPending() && !media.isUploading()) {
-                media.setUploading(true);
+               
                 VideoStatus updatedStatus = videoStatusService.fetchUpdatedVideoInfo(
                         media.getVideoId(), media);
 
                 if ("completed".equals(updatedStatus.getStatus())) {
+                     media.setUploading(true);
                     String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
                             updatedStatus.getUrl(), media);
 
                     media.setStatusPending(false);
-                    media.setUploading(false);
                     media.setVideoUrl(firebaseUrl);
 
                     updatedList.add(media.toMap());
