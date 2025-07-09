@@ -24,6 +24,17 @@ public class MediaService {
     @Autowired
     private FirebaseUploader firebaseUploader;
 
+    private void replaceInList(List<Map<String, Object>> updatedList, MediaDisplay media) {
+    for (int i = 0; i < updatedList.size(); i++) {
+        Map<String, Object> item = updatedList.get(i);
+        if (item.get("videoId").equals(media.getVideoId())) {
+            updatedList.set(i, media.toMap());
+            return;
+        }
+    }
+    updatedList.add(media.toMap()); // fallback if not found
+}
+
     public void refreshMediaStatuses(String uid) throws Exception {
         DocumentReference userDoc = firestore.collection("users").document(uid);
         DocumentSnapshot snapshot = userDoc.get().get();
@@ -47,15 +58,25 @@ public class MediaService {
                         media.getVideoId(), media);
 
                 if ("completed".equals(updatedStatus.getStatus())) {
-                     media.setUploading(true);
-                     updatedList.add(media.toMap());
-                     userDoc.update("media", updatedList);
-                    String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
-                            updatedStatus.getUrl(), media);
-                    media.setStatusPending(false);
-                    media.setVideoUrl(firebaseUrl);
-                    updatedList.add(media.toMap());
-                    userDoc.update("media", updatedList);
+                    // mark uploading
+media.setUploading(true);
+
+// update existing entry
+replaceInList(updatedList, media);
+userDoc.update("media", updatedList);
+
+// upload
+String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
+        updatedStatus.getUrl(), media);
+
+// update fields
+media.setStatusPending(false);
+media.setVideoUrl(firebaseUrl);
+
+// update again
+replaceInList(updatedList, media);
+userDoc.update("media", updatedList);
+
                 } else {
                     updatedList.add(media.toMap());
                 }
