@@ -59,22 +59,25 @@ public class MediaService {
 
                 if ("completed".equals(updatedStatus.getStatus())) {
                     // mark uploading
-media.setUploading(true);
+                     media.setUploading(true);
 
-// update existing entry
-replaceInList(updatedList, media);
+// add updated
+updatedList.add(media.toMap());
 userDoc.update("media", updatedList);
 
-// upload
 String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
         updatedStatus.getUrl(), media);
 
-// update fields
 media.setStatusPending(false);
 media.setVideoUrl(firebaseUrl);
 
-// update again
-replaceInList(updatedList, media);
+// remove last
+if (!updatedList.isEmpty()) {
+    updatedList.remove(updatedList.size() - 1);
+}
+
+// add updated
+updatedList.add(media.toMap());
 userDoc.update("media", updatedList);
 
                 } else {
