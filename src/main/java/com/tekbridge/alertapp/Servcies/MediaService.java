@@ -113,12 +113,9 @@ userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
         .putData("mediaId", media)
         .build();
 
-    FirebaseMessaging.getInstance().sendAsync(message)
-        .thenAccept(response -> System.out.println("✅ FCM sent: " + response))
-        .exceptionally(e -> {
-            System.err.println("❌ FCM send failed: " + e.getMessage());
-            return null;
-        });
-}
+        String response = FirebaseMessaging.getInstance().sendAsync(message).get();
+           System.out.println("✅ FCM sent: " + response);
+
+   }
 }
 
