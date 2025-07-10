@@ -86,7 +86,7 @@ userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
     System.out.println("✅ Firestore media updated");
 
     // 🔷 Send FCM Notification here
-    sendFcmNotification(userFcmToken,media);
+    sendFcmNotification(userFcmToken);
 }).addOnFailureListener(e -> {
     System.err.println("❌ Failed to update Firestore: " + e.getMessage());
 });
@@ -103,15 +103,14 @@ userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
         userDoc.update("media", updatedList);
     }
 
-    public void sendFcmNotification(String userFcmToken, Media media) {
+    public void sendFcmNotification(String userFcmToken) {
     Message message = Message.builder()
         .setToken(userFcmToken)
         .setNotification(Notification.builder()
             .setTitle("Matrend-AI")
             .setBody("Your Content is ready..")
             .build())
-        .putData("mediaId", media.getVideoId())
-        .putData("videoUrl", media.getVideoUrl())
+        .putData("mediaId", media)
         .build();
 
     FirebaseMessaging.getInstance().sendAsync(message)
