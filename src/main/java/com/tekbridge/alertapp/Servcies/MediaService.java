@@ -97,7 +97,7 @@ userDoc.update("media", updatedList);
         userDoc.update("media", updatedList);
     }
 
-    public void sendFcmNotification(String userFcmToken) {
+    public void sendFcmNotification(String userFcmToken) throws InterruptedException, ExecutionException {
     Message message = Message.builder()
         .setToken(userFcmToken)
         .setNotification(Notification.builder()
