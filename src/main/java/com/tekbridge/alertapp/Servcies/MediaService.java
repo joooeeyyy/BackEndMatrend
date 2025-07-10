@@ -110,7 +110,6 @@ userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
             .setTitle("Matrend-AI")
             .setBody("Your Content is ready..")
             .build())
-        .putData("mediaId", media)
         .build();
 
         String response = FirebaseMessaging.getInstance().sendAsync(message).get();
