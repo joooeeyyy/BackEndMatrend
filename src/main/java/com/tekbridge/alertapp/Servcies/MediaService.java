@@ -7,7 +7,8 @@ import com.tekbridge.alertapp.Firebase.MediaDisplay;
 import com.tekbridge.alertapp.Models.VideoStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.concurrent.ExecutionException;
+import java.lang.InterruptedException;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,7 @@ userDoc.update("media", updatedList);
         userDoc.update("media", updatedList);
     }
 
-    public void sendFcmNotification(String userFcmToken) throws InterruptedException, ExecutionException {
+    public void sendFcmNotification(String userFcmToken) throws InterruptedException {
     Message message = Message.builder()
         .setToken(userFcmToken)
         .setNotification(Notification.builder()
@@ -114,9 +115,7 @@ userDoc.update("media", updatedList);
     } catch (InterruptedException e) {
         Thread.currentThread().interrupt(); // restore interrupt status
         System.err.println("❌ FCM send interrupted: " + e.getMessage());
-    } catch (ExecutionException e) {
-        System.err.println("❌ FCM send failed: " + e.getCause());
-    }
+    } 
 
    }
 }
