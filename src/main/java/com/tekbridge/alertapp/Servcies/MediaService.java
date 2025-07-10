@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.lang.InterruptedException;
 
-
+import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +99,7 @@ userDoc.update("media", updatedList);
         userDoc.update("media", updatedList);
     }
 
-    public void sendFcmNotification(String userFcmToken) throws InterruptedException {
+    public void sendFcmNotification(String userFcmToken) throws InterruptedException , ExecutionException {
     Message message = Message.builder()
         .setToken(userFcmToken)
         .setNotification(Notification.builder()
@@ -115,7 +115,9 @@ userDoc.update("media", updatedList);
     } catch (InterruptedException e) {
         Thread.currentThread().interrupt(); // restore interrupt status
         System.err.println("❌ FCM send interrupted: " + e.getMessage());
-    } 
+    } catch (ExecutionException e) {
+            System.err.println("❌ Execution failed: " + e.getCause());
+        }
 
    }
 }
