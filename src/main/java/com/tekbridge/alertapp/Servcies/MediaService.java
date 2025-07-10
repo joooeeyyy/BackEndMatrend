@@ -82,14 +82,8 @@ if (!updatedList.isEmpty()) {
 
 // add updated
 updatedList.add(media.toMap());
-userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
-    System.out.println("✅ Firestore media updated");
-
-    // 🔷 Send FCM Notification here
-    sendFcmNotification(userFcmToken);
-}).addOnFailureListener(e -> {
-    System.err.println("❌ Failed to update Firestore: " + e.getMessage());
-});
+userDoc.update("media", updatedList);
+                    sendFcmNotification(userFcmToken);
 
                 } else {
                     updatedList.add(media.toMap());
