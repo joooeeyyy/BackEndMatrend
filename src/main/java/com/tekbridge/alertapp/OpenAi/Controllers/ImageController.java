@@ -136,7 +136,7 @@ public class ImageController {
         @PathVariable String uid) {
           String FcmToken = authorization.replace("Bearer ", "").trim();
 
-        System.out.println("Token Gotten yesss "+authorization+idToken);
+        System.out.println("Token Gotten yesss "+authorization+FcmToken);
         try {
             mediaService.refreshMediaStatuses(FcmToken,uid);
             return ResponseEntity.ok("Content refreshed successfully.");
