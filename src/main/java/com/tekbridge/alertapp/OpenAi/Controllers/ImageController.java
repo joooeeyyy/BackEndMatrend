@@ -131,9 +131,14 @@ public class ImageController {
     }
 
     @GetMapping("/refresh/{uid}")
-    public ResponseEntity<String> refreshMediaStatuses(@PathVariable String uid) {
+    public ResponseEntity<String> refreshMediaStatuses(
+         @RequestHeader("Authorization") String authorization,
+        @PathVariable String uid) {
+          String FcmToken = authorization.replace("Bearer ", "").trim();
+
+        System.out.println("Token Gotten yesss "+authorization+idToken);
         try {
-            mediaService.refreshMediaStatuses(uid);
+            mediaService.refreshMediaStatuses(FcmToken,uid);
             return ResponseEntity.ok("Content refreshed successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
