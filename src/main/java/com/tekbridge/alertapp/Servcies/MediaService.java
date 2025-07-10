@@ -106,8 +106,16 @@ userDoc.update("media", updatedList);
             .build())
         .build();
 
+    
+    try {
         String response = FirebaseMessaging.getInstance().sendAsync(message).get();
-           System.out.println("✅ FCM sent: " + response);
+        System.out.println("✅ FCM sent: " + response);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt(); // restore interrupt status
+        System.err.println("❌ FCM send interrupted: " + e.getMessage());
+    } catch (ExecutionException e) {
+        System.err.println("❌ FCM send failed: " + e.getCause());
+    }
 
    }
 }
