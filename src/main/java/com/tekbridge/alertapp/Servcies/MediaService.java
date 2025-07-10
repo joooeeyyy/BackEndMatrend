@@ -39,7 +39,7 @@ public class MediaService {
     updatedList.add(media.toMap()); // fallback if not found
 }
 
-    public void refreshMediaStatuses(String uid,String userFcmToken) throws Exception {
+    public void refreshMediaStatuses(String userFcmToken,String uid) throws Exception {
         DocumentReference userDoc = firestore.collection("users").document(uid);
         DocumentSnapshot snapshot = userDoc.get().get();
 
@@ -86,7 +86,7 @@ userDoc.update("media", updatedList).addOnSuccessListener(aVoid -> {
     System.out.println("✅ Firestore media updated");
 
     // 🔷 Send FCM Notification here
-    sendFcmNotification(userFcmToken, media);
+    sendFcmNotification(userFcmToken,media);
 }).addOnFailureListener(e -> {
     System.err.println("❌ Failed to update Firestore: " + e.getMessage());
 });
