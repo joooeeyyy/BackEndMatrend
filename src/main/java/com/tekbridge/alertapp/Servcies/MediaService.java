@@ -8,7 +8,9 @@ import com.tekbridge.alertapp.Models.VideoStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.lang.InterruptedException;
-
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
 import java.util.List;
