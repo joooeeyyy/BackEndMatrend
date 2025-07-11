@@ -131,7 +131,7 @@ userDoc.update("media", updatedList);
      * @param videoId Video ID to search for
      * @return Optional result: Map with keys: "userId" and "media"
      */
-    public Optional<Map<String, Object>> findUserByVideoId(String videoId) throws ExecutionException, InterruptedException {
+    public Optional<Map<String, Object>> findUserByVideoId(Long videoId) throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> usersFuture = firestore.collection("users").get();
         QuerySnapshot usersSnapshot = usersFuture.get();
 
