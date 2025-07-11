@@ -232,7 +232,7 @@ userDoc.update("media", updatedList);
             if (mediaListRaw == null) continue;
 
             for (Map<String, Object> mediaMap : mediaListRaw) {
-                String mVideoId = (String) mediaMap.get("videoId");
+                Long mVideoId = (Long) mediaMap.get("videoId");
                 if (videoId.equals(mVideoId)) {
                     return Optional.of(userId);
                 }
