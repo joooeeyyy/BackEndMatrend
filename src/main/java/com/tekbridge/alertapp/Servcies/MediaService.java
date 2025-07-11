@@ -157,7 +157,7 @@ userDoc.update("media", updatedList);
     }
 
 
-    public void processUserMediaByVideoId(String videoId) throws ExecutionException, InterruptedException {
+    public void processUserMediaByVideoId(String videoId) throws ExecutionException, InterruptedException , Exception{
         Optional<String> maybeUserId = findUserIdByVideoId(videoId);
 
         if (maybeUserId.isEmpty()) {
