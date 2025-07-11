@@ -147,7 +147,7 @@ public class ImageController {
     }
 
        @GetMapping("/process")
-    public ResponseEntity<String> processVideo(@RequestParam("videoId") String videoId)  throws Exception{
+    public ResponseEntity<String> processVideo(@RequestParam("videoId") String videoId)  {
         try {
             mediaService.processUserMediaByVideoId(videoId);
             return ResponseEntity.ok("Processing started for videoId: " + videoId);
