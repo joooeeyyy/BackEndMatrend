@@ -120,5 +120,124 @@ userDoc.update("media", updatedList);
         }
 
    }
+
+    /**
+     * Find user document and media node where media.videoId matches.
+     *
+     * @param videoId Video ID to search for
+     * @return Optional result: Map with keys: "userId" and "media"
+     */
+    public Optional<Map<String, Object>> findUserByVideoId(String videoId) throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> usersFuture = firestore.collection("users").get();
+        QuerySnapshot usersSnapshot = usersFuture.get();
+
+        for (QueryDocumentSnapshot userDoc : usersSnapshot.getDocuments()) {
+            String userId = userDoc.getId();
+            List<Map<String, Object>> mediaListRaw =
+                    (List<Map<String, Object>>) userDoc.get("media");
+
+            if (mediaListRaw == null) continue;
+
+            for (Map<String, Object> mediaMap : mediaListRaw) {
+                String mVideoId = (String) mediaMap.get("videoId");
+                if (videoId.equals(mVideoId)) {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("userId", userId);
+                    result.put("media", mediaMap);
+                    return Optional.of(result);
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+
+    public void processUserMediaByVideoId(String videoId) throws ExecutionException, InterruptedException {
+        Optional<String> maybeUserId = findUserIdByVideoId(videoId);
+
+        if (maybeUserId.isEmpty()) {
+            throw new IllegalStateException("No user found with videoId: " + videoId);
+        }
+
+        String userId = maybeUserId.get();
+        DocumentReference userDoc = firestore.collection("users").document(userId);
+        DocumentSnapshot snapshot = userDoc.get().get();
+
+        if (!snapshot.exists()) {
+            throw new IllegalStateException("User document not found: " + userId);
+        }
+
+        List<Map<String, Object>> mediaListRaw =
+                (List<Map<String, Object>>) snapshot.get("media");
+        if (mediaListRaw == null) mediaListRaw = new ArrayList<>();
+
+        List<Map<String, Object>> updatedList = new ArrayList<>();
+
+        for (Map<String, Object> mediaMap : mediaListRaw) {
+            MediaDisplay media = MediaDisplay.fromMap(mediaMap);
+
+            if (videoId.equals(media.getVideoId()) && media.isStatusPending() && !media.isUploading()) {
+
+                VideoStatus updatedStatus = videoStatusService.fetchUpdatedVideoInfo(
+                        media.getVideoId(), media);
+
+                if ("completed".equals(updatedStatus.getStatus())) {
+                    media.setUploading(true);
+
+                    // Add with uploading=true
+                    updatedList.add(media.toMap());
+                    userDoc.update("media", updatedList);
+
+                    String firebaseUrl = firebaseUploader.uploadVideoToFirebaseFromUrlAndUpdate(
+                            updatedStatus.getUrl(), media);
+
+                    media.setStatusPending(false);
+                    media.setVideoUrl(firebaseUrl);
+
+                    // Replace last with updated
+                    if (!updatedList.isEmpty()) {
+                        updatedList.remove(updatedList.size() - 1);
+                    }
+                    updatedList.add(media.toMap());
+                    userDoc.update("media", updatedList);
+
+                    //notificationService.sendFcmNotificationForUser(userId);
+
+                } else {
+                    updatedList.add(media.toMap());
+                }
+
+            } else {
+                updatedList.add(media.toMap());
+            }
+        }
+
+        userDoc.update("media", updatedList);
+    }
+
+    private Optional<String> findUserIdByVideoId(String videoId) throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> usersFuture = firestore.collection("users").get();
+        QuerySnapshot usersSnapshot = usersFuture.get();
+
+        for (QueryDocumentSnapshot userDoc : usersSnapshot.getDocuments()) {
+            String userId = userDoc.getId();
+            List<Map<String, Object>> mediaListRaw =
+                    (List<Map<String, Object>>) userDoc.get("media");
+
+            if (mediaListRaw == null) continue;
+
+            for (Map<String, Object> mediaMap : mediaListRaw) {
+                String mVideoId = (String) mediaMap.get("videoId");
+                if (videoId.equals(mVideoId)) {
+                    return Optional.of(userId);
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+
 }
 
