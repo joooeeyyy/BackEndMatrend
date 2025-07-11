@@ -146,6 +146,19 @@ public class ImageController {
         }
     }
 
+       @GetMapping("/process")
+    public ResponseEntity<String> processVideo(@RequestParam("videoId") String videoId) {
+        try {
+            mediaService.processUserMediaByVideoId(videoId);
+            return ResponseEntity.ok("Processing started for videoId: " + videoId);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing video: " + e.getMessage());
+        }
+    }
+
     public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
         DocumentReference userDoc = firestore.collection("users").document(uid);
 
