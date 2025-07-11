@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.lang.InterruptedException;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
+import java.util.HashMap;
+
 import com.google.cloud.firestore.QuerySnapshot;
 import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
