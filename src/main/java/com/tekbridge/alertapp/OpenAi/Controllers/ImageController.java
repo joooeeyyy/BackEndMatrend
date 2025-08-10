@@ -160,17 +160,31 @@ public class ImageController {
         }
     }
 
-    public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
-        DocumentReference userDoc = firestore.collection("users").document(uid);
+   public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
+    DocumentReference userDoc = firestore.collection("users").document(uid);
 
-        Map<String, Object> mediaMap = media.toMap();
+    // Convert the media object to a map
+    Map<String, Object> mediaMap = media.toMap();
 
+    // First, check if the document exists
+    ApiFuture<DocumentSnapshot> docSnapshot = userDoc.get();
+    
+    if (docSnapshot.get().exists()) {
+        // Document exists, safe to update
         ApiFuture<WriteResult> result = userDoc.update("media", FieldValue.arrayUnion(mediaMap));
-
         result.get(); // wait for completion
-
         System.out.println("✅ Media saved to Firestore for user: " + uid);
+    } else {
+        // Document doesn't exist, create it with media
+        Map<String, Object> createData = new HashMap<>();
+        createData.put("media", FieldValue.arrayUnion(mediaMap));
+
+        ApiFuture<WriteResult> result = userDoc.set(createData, SetOptions.merge());
+        result.get(); // wait for completion
+        System.out.println("✅ User document created with media for user: " + uid);
     }
+}
+
     @PostMapping("/imageGen")
     public ResponseEntity<ResponseVideoPicture> imageGen(
             @RequestHeader("Authorization") String authorization,
