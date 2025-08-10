@@ -171,12 +171,12 @@ public class ImageController {
     // First, check if the document exists
     // ApiFuture<DocumentSnapshot> docSnapshot = userDoc.get();
     
-    if (docSnapshot.get().exists()) {
+    //if (docSnapshot.get().exists()) {
         // Document exists, safe to update
         // ApiFuture<WriteResult> result = userDoc.update("media", FieldValue.arrayUnion(mediaMap));
         // result.get(); // wait for completion
         // System.out.println("✅ Media saved to Firestore for user: " + uid);
-    } else {
+   // } else {
         // // Document doesn't exist, create it with media
         // Map<String, Object> createData = new HashMap<>();
         // createData.put("media", FieldValue.arrayUnion(mediaMap));
@@ -184,7 +184,7 @@ public class ImageController {
         // ApiFuture<WriteResult> result = userDoc.set(createData, SetOptions.merge());
         // result.get(); // wait for completion
         // System.out.println("✅ User document created with media for user: " + uid);
-    }
+    //}
 }
 
     @PostMapping("/imageGen")
