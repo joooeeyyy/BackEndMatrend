@@ -131,6 +131,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+		<dependency>
+    <groupId>com.google.firebase</groupId>
+    <artifactId>firebase-admin</artifactId>
+    <version>9.1.0</version> <!-- Use the latest version -->
+</dependency>
     </dependencies>
 	<dependencyManagement>
 		<dependencies>
