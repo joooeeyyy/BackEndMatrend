@@ -60,7 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 // import com.google.firebase.firestore.SetOptions;
-import com.google.firebase.firestore.DocumentSnapshot;
+// import com.google.firebase.firestore.DocumentSnapshot;
 
 @Controller
 public class ImageController {
@@ -169,13 +169,13 @@ public class ImageController {
     Map<String, Object> mediaMap = media.toMap();
 
     // First, check if the document exists
-    ApiFuture<DocumentSnapshot> docSnapshot = userDoc.get();
+    // ApiFuture<DocumentSnapshot> docSnapshot = userDoc.get();
     
     if (docSnapshot.get().exists()) {
         // Document exists, safe to update
-        ApiFuture<WriteResult> result = userDoc.update("media", FieldValue.arrayUnion(mediaMap));
-        result.get(); // wait for completion
-        System.out.println("✅ Media saved to Firestore for user: " + uid);
+        // ApiFuture<WriteResult> result = userDoc.update("media", FieldValue.arrayUnion(mediaMap));
+        // result.get(); // wait for completion
+        // System.out.println("✅ Media saved to Firestore for user: " + uid);
     } else {
         // // Document doesn't exist, create it with media
         // Map<String, Object> createData = new HashMap<>();
