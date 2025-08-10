@@ -59,7 +59,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import com.google.firebase.firestore.SetOptions;
+// import com.google.firebase.firestore.SetOptions;
 
 @Controller
 public class ImageController {
@@ -176,13 +176,13 @@ public class ImageController {
         result.get(); // wait for completion
         System.out.println("✅ Media saved to Firestore for user: " + uid);
     } else {
-        // Document doesn't exist, create it with media
-        Map<String, Object> createData = new HashMap<>();
-        createData.put("media", FieldValue.arrayUnion(mediaMap));
+        // // Document doesn't exist, create it with media
+        // Map<String, Object> createData = new HashMap<>();
+        // createData.put("media", FieldValue.arrayUnion(mediaMap));
 
-        ApiFuture<WriteResult> result = userDoc.set(createData, SetOptions.merge());
-        result.get(); // wait for completion
-        System.out.println("✅ User document created with media for user: " + uid);
+        // ApiFuture<WriteResult> result = userDoc.set(createData, SetOptions.merge());
+        // result.get(); // wait for completion
+        // System.out.println("✅ User document created with media for user: " + uid);
     }
 }
 
