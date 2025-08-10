@@ -101,6 +101,7 @@ public class ImageController {
 
     
    public void saveMediaToFirestore(String uid, MediaDisplay media) throws Exception {
+       
     DocumentReference userDoc = firestore.collection("users").document(uid);
 
     // Convert the media object to a map
