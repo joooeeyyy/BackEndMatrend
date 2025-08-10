@@ -59,8 +59,8 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-// import com.google.firebase.firestore.SetOptions;
-// import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 @Controller
 public class ImageController {
