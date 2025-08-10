@@ -188,7 +188,7 @@ public class ImageController {
          System.out.println("✅ User document created with media for user: " + uid);
     }
 }
-}
+
 
     @PostMapping("/imageGen")
     public ResponseEntity<ResponseVideoPicture> imageGen(
