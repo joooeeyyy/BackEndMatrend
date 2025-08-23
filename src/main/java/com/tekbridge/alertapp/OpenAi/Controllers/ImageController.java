@@ -3,9 +3,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.vision.v1.BoundingPoly;
-import com.google.cloud.vision.v1.Word;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.database.*;
 import com.tekbridge.alertapp.Firebase.MediaDisplay;
 import com.tekbridge.alertapp.Models.ResponseVideoPicture;
 import com.tekbridge.alertapp.Models.VideoGenRequestModel;
@@ -14,6 +14,7 @@ import com.tekbridge.alertapp.Servcies.BoundPolyAndDescription;
 import com.tekbridge.alertapp.Servcies.ImageGenerationService.ImageGenerationService;
 import com.tekbridge.alertapp.Servcies.MediaService;
 import com.tekbridge.alertapp.Servcies.TextDetectionService;
+import com.tekbridge.alertapp.runway.runway_image_service;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -29,6 +30,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.google.api.core.ApiFuture;
@@ -56,16 +59,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.firebase.cloud.FirestoreClient;
 
 @Controller
 public class ImageController {
+
+    @Autowired
+    private runway_image_service runwayImageService;
 
     private final MediaService mediaService;
 
@@ -259,6 +261,22 @@ public class ImageController {
         Long videoId = requestVideoGeneration(videoGenRequestModel,
                 "https://viralapi.vadoo.tv/api/generate_video");
 
+        //TODO : This is where you start playing with runway api
+        CompletableFuture<Void> completableFuture = createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+        completableFuture.thenAccept(Void->{
+            try {
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        //After the video id is generated , create a node - user-videoID-[List of strings , if pending put id , if not put string url]
+        //TODO : Later on when the video is generated get all the urls from here and add it to the mediaNode , then delete the node here
+        //Check Media Service for the second todo
+        //TODO: This is where you start playing with runway api
+
         ResponseVideoPicture responseVideoPicture = new ResponseVideoPicture(
                 videoId, resultPictures
         );
@@ -278,6 +296,60 @@ public class ImageController {
         saveMediaToFirestore(uid, media);
 
         return ResponseEntity.ok(responseVideoPicture);
+    }
+
+    CompletableFuture<Void> createNodeTriggerRunwayGeneration(String videoId , String userId , String imagePrompt, String businessName) throws JsonProcessingException {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("runway_generation").child(userId).child(videoId);
+
+        String generatedVideoId = runwayImageService.requestRunwayImageGeneration(imagePrompt,businessName);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        databaseReference.runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                List<String> currentList = null;
+                Object rawValue = mutableData.getValue();
+                if (rawValue == null){
+                    currentList = new ArrayList<>();
+                }else if(rawValue instanceof List){
+                    currentList = new ArrayList<>();
+                    try{
+                        for(Object item : (List<?>) rawValue){
+                            if(item instanceof String){
+                                currentList.add((String) item);
+                            }else {
+                                System.out.println("Non String Item");
+                            }
+                        }
+                    }catch (Exception ignored){}
+                }else{
+                    currentList = new ArrayList<>();
+                }
+                currentList.add(generatedVideoId);
+                mutableData.setValue(currentList);
+                return Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+                if (databaseError != null) {
+                   // logger.error("Firebase transaction failed for path '{}': {}", nodePath, databaseError.getMessage());
+                    future.completeExceptionally(databaseError.toException());
+                } else if (!b) {
+                    // This can happen due to contention if retries are exhausted.
+                    //logger.warn("Firebase transaction for path '{}' was not committed. The data may not have been updated.", nodePath);
+                    future.completeExceptionally(new RuntimeException("Transaction not committed for path: " ));
+                } else {
+                    //logger.info("Successfully added value to list at path '{}'. New list size: {}",
+                      //      nodePath, dataSnapshot.getChildrenCount());
+                    future.complete(null);
+                }
+            }
+        });
+
+        return future;
+
     }
 
     @GetMapping("/{filename:.+}")
