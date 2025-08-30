@@ -336,7 +336,7 @@ public class ImageController {
             @Override
             public void onFailure(Throwable t) {
                 // Check if the failure was because the document was not found
-                if (t instanceof com.google.cloud.firestore.FirestoreException) { // Check if it's a Firestore specific exception
+            // Check if it's a Firestore specific exception
                     com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
                     if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
                         // THIS BLOCK IS EXECUTED FOR THE ERROR YOU'RE SEEING
@@ -363,7 +363,7 @@ public class ImageController {
                         }, executor); // Use the provided executor
                         return; // Important: return after dispatching the async set operation
                     }
-                }
+
                 // For any other failure reason during update
                 System.err.println("User " + userId + ": Failed to update video_ids: " + t.getMessage());
                 operationCompletableFuture.completeExceptionally(t);
