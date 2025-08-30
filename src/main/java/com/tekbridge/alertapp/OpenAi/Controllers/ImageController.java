@@ -2,9 +2,13 @@ package com.tekbridge.alertapp.OpenAi.Controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.vision.v1.BoundingPoly;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.database.*;
 import com.tekbridge.alertapp.Firebase.MediaDisplay;
 import com.tekbridge.alertapp.Models.ResponseVideoPicture;
@@ -15,6 +19,7 @@ import com.tekbridge.alertapp.Servcies.ImageGenerationService.ImageGenerationSer
 import com.tekbridge.alertapp.Servcies.MediaService;
 import com.tekbridge.alertapp.Servcies.TextDetectionService;
 import com.tekbridge.alertapp.runway.runway_image_service;
+import io.grpc.Status;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -59,9 +64,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.net.MalformedURLException;
+import java.util.concurrent.Executor;
 
 import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.SetOptions;
 
 @Controller
 public class ImageController {
@@ -143,7 +152,6 @@ public class ImageController {
     }
 
     byte[] getByteFromEachImage(String imageUrl,com.tekbridge.alertapp.Models.ImagePrompt imagePromptUser) throws Exception {
-
         BoundPolyAndDescription foundString = detectionService.detectTextFromPublicUrl(imageUrl);
         List<WordBox> boxes = detectionService.detectWordBoundingBoxes(imageUrl);
         byte[] newImage = new byte[0];
@@ -158,11 +166,8 @@ public class ImageController {
             newImage = baos.toByteArray();
             baos.close();
         }
-
         byte[] imageByte = captionImage(newImage,imagePromptUser.getNameOfCompany(),imagePromptUser.getPhoneNumber()+" ");
-
         return  imageByte;
-
     }
 
     @GetMapping("/refresh/{uid}")
@@ -264,13 +269,9 @@ public class ImageController {
         //TODO : This is where you start playing with runway api
         CompletableFuture<Void> completableFuture = createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
         completableFuture.thenAccept(Void->{
-            try {
-                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
         });
         //After the video id is generated , create a node - user-videoID-[List of strings , if pending put id , if not put string url]
         //TODO : Later on when the video is generated get all the urls from here and add it to the mediaNode , then delete the node here
@@ -298,59 +299,134 @@ public class ImageController {
         return ResponseEntity.ok(responseVideoPicture);
     }
 
-    CompletableFuture<Void> createNodeTriggerRunwayGeneration(String videoId , String userId , String imagePrompt, String businessName) throws JsonProcessingException {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("runway_generation").child(userId).child(videoId);
 
-        String generatedVideoId = runwayImageService.requestRunwayImageGeneration(imagePrompt,businessName);
+    public CompletableFuture<Void> createNodeTriggerRunwayGeneration(
+            String videoId, // This parameter is unused in the current logic
+            String userId,
+            String imagePrompt,
+            String businessName) {
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        Executor executor = MoreExecutors.directExecutor();
+        Firestore db = FirestoreClient.getFirestore(); // Get Firestore instance
+        CompletableFuture<Void> operationCompletableFuture = new CompletableFuture<>();
 
-        databaseReference.runTransaction(new Transaction.Handler() {
+        // --- Step 1: Request Runway Image Generation ---
+        String generatedVideoIdFromService;
+        try {
+            generatedVideoIdFromService = runwayImageService.requestRunwayImageGeneration(imagePrompt, businessName);
+        } catch (JsonProcessingException e) {
+            operationCompletableFuture.completeExceptionally(e);
+            return operationCompletableFuture;
+        }
+
+        // --- Step 2: Add generatedVideoId to Firestore ---
+        DocumentReference userDocRef = db.collection("runway_generations").document(userId);
+
+        // Try to update the array in the existing document
+        ApiFuture<WriteResult> updateFuture = userDocRef.update("video_ids", FieldValue.arrayUnion(generatedVideoIdFromService));
+
+        ApiFutures.addCallback(updateFuture, new ApiFutureCallback<WriteResult>() {
             @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                List<String> currentList = null;
-                Object rawValue = mutableData.getValue();
-                if (rawValue == null){
-                    currentList = new ArrayList<>();
-                }else if(rawValue instanceof List){
-                    currentList = new ArrayList<>();
-                    try{
-                        for(Object item : (List<?>) rawValue){
-                            if(item instanceof String){
-                                currentList.add((String) item);
-                            }else {
-                                System.out.println("Non String Item");
+            public void onSuccess(WriteResult result) {
+                // Successfully updated the array (document existed)
+                System.out.println("User " + userId + ": Successfully updated video_ids with " + generatedVideoIdFromService);
+                operationCompletableFuture.complete(null);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                // Check if the failure was because the document was not found
+                if (t instanceof com.google.cloud.firestore.FirestoreException) {
+                    com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
+                    if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                        System.out.println("User " + userId + ": Document not found. Creating new document with video_id: " + generatedVideoIdFromService);
+                        // Document does not exist, so create it with the video_id
+                        Map<String, Object> newData = new HashMap<>();
+                        // For a new document, initialize the array with the first ID
+                        newData.put("video_ids", Collections.singletonList(generatedVideoIdFromService));
+
+                        ApiFuture<WriteResult> setFuture = userDocRef.set(newData);
+                        ApiFutures.addCallback(setFuture, new ApiFutureCallback<WriteResult>() {
+                            @Override
+                            public void onSuccess(WriteResult setResult) {
+                                // Successfully created the document
+                                System.out.println("User " + userId + ": Successfully created document and added video_id: " + generatedVideoIdFromService);
+                                operationCompletableFuture.complete(null);
                             }
-                        }
-                    }catch (Exception ignored){}
-                }else{
-                    currentList = new ArrayList<>();
+
+                            @Override
+                            public void onFailure(Throwable setThrowable) {
+                                // Failed to create the document
+                                System.err.println("User " + userId + ": Failed to create document after not found: " + setThrowable.getMessage());
+                                operationCompletableFuture.completeExceptionally(setThrowable);
+                            }
+                        }, executor); // Use the provided executor
+                        return; // Important: return after dispatching the async set operation
+                    }
                 }
-                currentList.add(generatedVideoId);
-                mutableData.setValue(currentList);
-                return Transaction.success(mutableData);
+                // For any other failure reason during update
+                System.err.println("User " + userId + ": Failed to update video_ids: " + t.getMessage());
+                operationCompletableFuture.completeExceptionally(t);
             }
+        }, executor); // Use the provided executor
 
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-                if (databaseError != null) {
-                   // logger.error("Firebase transaction failed for path '{}': {}", nodePath, databaseError.getMessage());
-                    future.completeExceptionally(databaseError.toException());
-                } else if (!b) {
-                    // This can happen due to contention if retries are exhausted.
-                    //logger.warn("Firebase transaction for path '{}' was not committed. The data may not have been updated.", nodePath);
-                    future.completeExceptionally(new RuntimeException("Transaction not committed for path: " ));
-                } else {
-                    //logger.info("Successfully added value to list at path '{}'. New list size: {}",
-                      //      nodePath, dataSnapshot.getChildrenCount());
-                    future.complete(null);
-                }
-            }
-        });
-
-        return future;
-
+        return operationCompletableFuture;
     }
+
+
+//    CompletableFuture<Void> createNodeTriggerRunwayGeneration(String videoId , String userId , String imagePrompt, String businessName) throws JsonProcessingException {
+//        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("runway_generation").child(userId).child(videoId);
+//
+//        String generatedVideoId = runwayImageService.requestRunwayImageGeneration(imagePrompt,businessName);
+//
+//        CompletableFuture<Void> future = new CompletableFuture<>();
+//
+//        databaseReference.runTransaction(new Transaction.Handler() {
+//            @Override
+//            public Transaction.Result doTransaction(MutableData mutableData) {
+//                List<String> currentList = null;
+//                Object rawValue = mutableData.getValue();
+//                if (rawValue == null){
+//                    currentList = new ArrayList<>();
+//                }else if(rawValue instanceof List){
+//                    currentList = new ArrayList<>();
+//                    try{
+//                        for(Object item : (List<?>) rawValue){
+//                            if(item instanceof String){
+//                                currentList.add((String) item);
+//                            }else {
+//                                System.out.println("Non String Item");
+//                            }
+//                        }
+//                    }catch (Exception ignored){}
+//                }else{
+//                    currentList = new ArrayList<>();
+//                }
+//                currentList.add(generatedVideoId);
+//                mutableData.setValue(currentList);
+//                return Transaction.success(mutableData);
+//            }
+//
+//            @Override
+//            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+//                if (databaseError != null) {
+//                   // logger.error("Firebase transaction failed for path '{}': {}", nodePath, databaseError.getMessage());
+//                    future.completeExceptionally(databaseError.toException());
+//                } else if (!b) {
+//                    // This can happen due to contention if retries are exhausted.
+//                    //logger.warn("Firebase transaction for path '{}' was not committed. The data may not have been updated.", nodePath);
+//                    future.completeExceptionally(new RuntimeException("Transaction not committed for path: " ));
+//                } else {
+//                    //logger.info("Successfully added value to list at path '{}'. New list size: {}",
+//                      //      nodePath, dataSnapshot.getChildrenCount());
+//                    future.complete(null);
+//                }
+//            }
+//        });
+//
+//        return future;
+//
+//    }
 
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) {
@@ -693,5 +769,110 @@ public class ImageController {
         return inputText.replace("\"", "");
     }
 
-
 }
+//
+//
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.google.api.core.ApiFuture;
+//import com.google.api.core.ApiFutureCallback;
+//import com.google.api.core.ApiFutures;
+//import com.google.cloud.firestore.DocumentReference;
+//import com.google.cloud.firestore.FieldValue;
+//import com.google.cloud.firestore.Firestore;
+//import com.google.cloud.firestore.FirestoreClient; // Assuming this is how you get your instance
+//import com.google.cloud.firestore.WriteResult;
+//import com.google.common.util.concurrent.MoreExecutors; // For the executor
+//import io.grpc.Status; // For checking Firestore exception status codes
+//
+//import java.util.Collections;
+//import java.util.HashMap;
+//import java.util.Map;
+//import java.util.concurrent.CompletableFuture;
+//import java.util.concurrent.Executor; // For the executor
+//
+//// Placeholder for your actual RunwayImageService - place its definition here or ensure it's imported
+//class RunwayImageService {
+//    public String requestRunwayImageGeneration(String imagePrompt, String businessName) throws JsonProcessingException {
+//        // Simulate real work that might throw JsonProcessingException
+//        if (imagePrompt == null || imagePrompt.isEmpty()) {
+//            throw new JsonProcessingException("Image prompt cannot be empty") {};
+//        }
+//        System.out.println("Mock Runway: Generating for prompt '" + imagePrompt + "', business '" + businessName + "'");
+//        return "vid_gen_" + System.currentTimeMillis();
+//    }
+//}
+//
+//
+//public class UnifiedRunwayService {
+//
+//    // You'll need to make runwayImageService accessible here.
+//    // It could be a static instance, passed in, or instantiated.
+//    // For this example, let's assume it's instantiated directly or is a member.
+//    private RunwayImageService runwayImageService; // Instance member
+//    private Executor executor; // Executor for callbacks
+//
+//    public UnifiedRunwayService(RunwayImageService runwayImageService, Executor executor) {
+//        this.runwayImageService = runwayImageService;
+//        this.executor = executor;
+//    }
+//
+//
+//    // --- Main method for demonstration ---
+//    public static void main(String[] args) {
+//        // Setup (ensure Firestore is initialized or use emulator)
+//        // For local testing, you might need to set FIRESTORE_EMULATOR_HOST environment variable
+//        // e.g., System.setProperty("FIRESTORE_EMULATOR_HOST", "localhost:8080");
+//        // And initialize FirebaseApp if not already:
+//        /*
+//        try {
+//            FirebaseOptions options = FirebaseOptions.builder()
+//                .setCredentials(GoogleCredentials.getApplicationDefault()) // Or your service account
+//                .setProjectId("YOUR_PROJECT_ID") // Replace with your project ID
+//                .build();
+//            if (FirebaseApp.getApps().isEmpty()) {
+//                FirebaseApp.initializeApp(options);
+//            }
+//        } catch (IOException e) {
+//            System.err.println("Failed to initialize Firebase: " + e.getMessage());
+//            return;
+//        }
+//        */
+//
+//
+//        RunwayImageService localRunwayService = new RunwayImageService();
+//        Executor directExecutor = MoreExecutors.directExecutor(); // For simplicity in demo
+//        UnifiedRunwayService service = new UnifiedRunwayService(localRunwayService, directExecutor);
+//
+//        // Test Data
+//        String testVideoId = "vidUnused123"; // This videoId parameter is not used in the function logic
+//        String testUserId = "testUser_" + System.currentTimeMillis(); // Unique user ID for testing
+//        String testImagePrompt = "a serene mountain landscape";
+//        String testBusinessName = "Nature Visuals Co.";
+//
+//        System.out.println("Attempting to trigger generation for user: " + testUserId);
+//
+//        CompletableFuture<Void> resultFuture = service.createNodeTriggerRunwayGeneration(
+//                testVideoId,
+//                testUserId,
+//                testImagePrompt,
+//                testBusinessName
+//        );
+//
+//        resultFuture.thenRun(() -> {
+//            System.out.println("Operation for user " + testUserId + " completed successfully.");
+//        }).exceptionally(ex -> {
+//            System.err.println("Operation for user " + testUserId + " failed: " + ex.getMessage());
+//            ex.printStackTrace();
+//            return null;
+//        });
+//
+//        // Keep the main thread alive for a bit for async operations to complete in this demo
+//        try {
+//            Thread.sleep(7000); // Adjust as needed
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
+//        System.out.println("Demo finished.");
+//    }
+//}
+
