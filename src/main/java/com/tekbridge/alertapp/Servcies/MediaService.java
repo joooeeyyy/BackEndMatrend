@@ -138,14 +138,14 @@ public class MediaService {
                 if ("completed".equals(updatedStatus.getStatus())) {
 
                     //TODO : When status is completed then get all the url from videoId node and add it to the media nodd, delete that video node
-                    CompletableFuture<List<String>> completableFuture = getAllTheUrlsRunWayAndDeleteNode(String.valueOf(media.getVideoId()),uid);
-                    List<String> resultNewUrls =  completableFuture.get();
-                    media.getPictures().addAll(resultNewUrls);
-
-
-                    DatabaseReference videoNodeRef = FirebaseDatabase.getInstance().getReference("runway_generation").child(uid).child(String.valueOf(media.getVideoId()));// Or your specific node name for videos
-                    videoNodeRef.removeValueAsync(); // Using removeValueAsync for non-blocking operation
-                    System.out.println("Attempting to delete video node: " + media.getVideoId() + " for user: " + uid);
+//                    CompletableFuture<List<String>> completableFuture = getAllTheUrlsRunWayAndDeleteNode(String.valueOf(media.getVideoId()),uid);
+//                    List<String> resultNewUrls =  completableFuture.get();
+//                    media.getPictures().addAll(resultNewUrls);
+//
+//
+//                    DatabaseReference videoNodeRef = FirebaseDatabase.getInstance().getReference("runway_generation").child(uid).child(String.valueOf(media.getVideoId()));// Or your specific node name for videos
+//                    videoNodeRef.removeValueAsync(); // Using removeValueAsync for non-blocking operation
+//                    System.out.println("Attempting to delete video node: " + media.getVideoId() + " for user: " + uid);
                     //TODO : When status is completed then get all the url from videoId node and add it to the media nodd, delete that video node
 
                     // mark uploading

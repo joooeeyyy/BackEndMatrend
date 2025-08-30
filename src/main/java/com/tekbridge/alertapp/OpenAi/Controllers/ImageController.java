@@ -336,7 +336,7 @@ public class ImageController {
             @Override
             public void onFailure(Throwable t) {
                 // Check if the failure was because the document was not found
-            // Check if it's a Firestore specific exception
+                // Check if it's a Firestore specific exception
                     com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
                     if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
                         // THIS BLOCK IS EXECUTED FOR THE ERROR YOU'RE SEEING
