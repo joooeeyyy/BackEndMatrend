@@ -336,27 +336,27 @@ public class ImageController {
             @Override
             public void onFailure(Throwable t) {
                 // Check if the failure was because the document was not found
-                if (t instanceof com.google.cloud.firestore.FirestoreException) {
+                if (t instanceof com.google.cloud.firestore.FirestoreException) { // Check if it's a Firestore specific exception
                     com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
                     if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                        // THIS BLOCK IS EXECUTED FOR THE ERROR YOU'RE SEEING
                         System.out.println("User " + userId + ": Document not found. Creating new document with video_id: " + generatedVideoIdFromService);
+
                         // Document does not exist, so create it with the video_id
                         Map<String, Object> newData = new HashMap<>();
-                        // For a new document, initialize the array with the first ID
                         newData.put("video_ids", Collections.singletonList(generatedVideoIdFromService));
 
+                        // Use .set() to create the document
                         ApiFuture<WriteResult> setFuture = userDocRef.set(newData);
                         ApiFutures.addCallback(setFuture, new ApiFutureCallback<WriteResult>() {
                             @Override
                             public void onSuccess(WriteResult setResult) {
-                                // Successfully created the document
                                 System.out.println("User " + userId + ": Successfully created document and added video_id: " + generatedVideoIdFromService);
                                 operationCompletableFuture.complete(null);
                             }
 
                             @Override
                             public void onFailure(Throwable setThrowable) {
-                                // Failed to create the document
                                 System.err.println("User " + userId + ": Failed to create document after not found: " + setThrowable.getMessage());
                                 operationCompletableFuture.completeExceptionally(setThrowable);
                             }
@@ -368,6 +368,7 @@ public class ImageController {
                 System.err.println("User " + userId + ": Failed to update video_ids: " + t.getMessage());
                 operationCompletableFuture.completeExceptionally(t);
             }
+
         }, executor); // Use the provided executor
 
         return operationCompletableFuture;
