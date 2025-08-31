@@ -314,33 +314,37 @@ public class ImageController {
         String generatedVideoIdFromService;
         try {
             generatedVideoIdFromService = runwayImageService.requestRunwayImageGeneration(imagePrompt, businessName);
+            System.out.println("Runway output from Image Generation Request End Block " + generatedVideoIdFromService);
         } catch (JsonProcessingException e) {
+            System.out.println("Runway exception catch from Image Generation Request End Block " + e.getMessage());
             operationCompletableFuture.completeExceptionally(e);
             return operationCompletableFuture;
         }
 
         // --- Step 2: Add generatedVideoId to Firestore ---
         DocumentReference userDocRef = db.collection("runway_generations").document(userId);
-
+        System.out.println("Runway add generatedVideoId to Firestore " );
         // Try to update the array in the existing document
         ApiFuture<WriteResult> updateFuture = userDocRef.update("video_ids", FieldValue.arrayUnion(generatedVideoIdFromService));
 
         ApiFutures.addCallback(updateFuture, new ApiFutureCallback<WriteResult>() {
             @Override
             public void onSuccess(WriteResult result) {
+                System.out.println("Runway added successfully generatedVideoId to Firestore " );
                 // Successfully updated the array (document existed)
-                System.out.println("User " + userId + ": Successfully updated video_ids with " + generatedVideoIdFromService);
+                System.out.println("Runway User " + userId + ": Successfully updated video_ids with " + generatedVideoIdFromService);
                 operationCompletableFuture.complete(null);
             }
 
             @Override
             public void onFailure(Throwable t) {
+                    System.out.println("Runway Failed to add to Firestore " + t.getMessage());
                 // Check if the failure was because the document was not found
                 // Check if it's a Firestore specific exception
-                    com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
-                    if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
+//                    com.google.cloud.firestore.FirestoreException firestoreException = (com.google.cloud.firestore.FirestoreException) t;
+                 //   if (firestoreException.getStatus().getCode() == Status.Code.NOT_FOUND) {
                         // THIS BLOCK IS EXECUTED FOR THE ERROR YOU'RE SEEING
-                        System.out.println("User " + userId + ": Document not found. Creating new document with video_id: " + generatedVideoIdFromService);
+                        System.out.println("RunWay User " + userId + ": Document not found. Creating new document with video_id: " + generatedVideoIdFromService);
 
                         // Document does not exist, so create it with the video_id
                         Map<String, Object> newData = new HashMap<>();
@@ -361,8 +365,8 @@ public class ImageController {
                                 operationCompletableFuture.completeExceptionally(setThrowable);
                             }
                         }, executor); // Use the provided executor
-                        return; // Important: return after dispatching the async set operation
-                    }
+//                        return; // Important: return after dispatching the async set operation
+
 
                 // For any other failure reason during update
                 System.err.println("User " + userId + ": Failed to update video_ids: " + t.getMessage());
