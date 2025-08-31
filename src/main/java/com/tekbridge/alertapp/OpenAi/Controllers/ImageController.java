@@ -267,12 +267,15 @@ public class ImageController {
                 "https://viralapi.vadoo.tv/api/generate_video");
 
         //TODO : This is where you start playing with runway api
-        CompletableFuture<Void> completableFuture = createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-        completableFuture.thenAccept(Void->{
+            try{
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            }catch (RuntimeException e){
+                System.out.println("RunWay Run Time Exception Caught "+e.getMessage());
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            }
             createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
             createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
             createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-        });
         //After the video id is generated , create a node - user-videoID-[List of strings , if pending put id , if not put string url]
         //TODO : Later on when the video is generated get all the urls from here and add it to the mediaNode , then delete the node here
         //Check Media Service for the second todo
@@ -355,8 +358,11 @@ public class ImageController {
                         ApiFutures.addCallback(setFuture, new ApiFutureCallback<WriteResult>() {
                             @Override
                             public void onSuccess(WriteResult setResult) {
-                                System.out.println("User " + userId + ": Successfully created document and added video_id: " + generatedVideoIdFromService);
+                                System.out.println("Runway User " + userId + ": Successfully created document and added video_id: " + generatedVideoIdFromService);
                                 operationCompletableFuture.complete(null);
+
+                                throw new RuntimeException("access created");
+
                             }
 
                             @Override
@@ -369,7 +375,7 @@ public class ImageController {
 
 
                 // For any other failure reason during update
-                System.err.println("User " + userId + ": Failed to update video_ids: " + t.getMessage());
+
                 operationCompletableFuture.completeExceptionally(t);
             }
 
