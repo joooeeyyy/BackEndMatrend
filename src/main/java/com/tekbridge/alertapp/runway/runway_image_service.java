@@ -82,6 +82,17 @@ public class runway_image_service {
         System.out.println("RUNWAY Request Started End Block four" + id +" "+apiUrlWithParams);
         ResponseEntity<Map<String, String>> responseString = null;
         try {
+
+            ResponseEntity<String> rawResponse = restTemplate.exchange(
+                    apiUrlWithParams,
+                    HttpMethod.GET,
+                    requestEntity,
+                    String.class // Get as raw string first
+            );
+            System.out.println("RAW RESPONSE BODY: " + rawResponse.getBody());
+            // Now try to parse rawResponse.getBody() manually or figure out its structure
+
+            // Then, attempt your original typed exchange if the structure looks correct
              responseString = restTemplate.exchange(
                     apiUrlWithParams,
                     HttpMethod.GET,
