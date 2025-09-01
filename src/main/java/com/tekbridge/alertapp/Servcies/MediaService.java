@@ -148,21 +148,26 @@ public class MediaService {
 
                 if ("completed".equals(updatedStatus.getStatus())) {
 
+                    System.out.println("Video status updated successfully. ");
                     //TODO : When status is completed then get all the url from videoId node and add it to the media nodd, delete that video node
                     List<String> videoIdsForUrl = getVideoIdsForUser(uid);
+                    System.out.println("Video IDs for url: " + videoIdsForUrl.size());
                     List<String> reVerifiedVideoIds = new ArrayList<>();
 
                     Object resultFromVideoStatus;
 
                     for(String videoId : videoIdsForUrl){
                         resultFromVideoStatus = runwayImageService.getIdRunwayAndVerify(videoId);
+                        System.out.println("Video ID: " + videoId + " resultFromVideoStatus: " + resultFromVideoStatus);
                         if (resultFromVideoStatus instanceof SuccessPendingGeneration) {
+                            System.out.println("Video status updated successfully. failed");
                             // myObject is an instance of SuccessPendingGeneration
                             SuccessPendingGeneration PendingObject = (SuccessPendingGeneration) resultFromVideoStatus;
                             // Now you can safely use methods specific to SuccessPendingGeneration
                             String id = PendingObject.getId();
                             reVerifiedVideoIds.add(id);
                         } else if (resultFromVideoStatus instanceof SuccessGeneratedContent) {
+                            System.out.println("Video status updated successfully. success");
                             // myObject is an instance of AnotherObjectType
                             SuccessGeneratedContent SuccessObject = (SuccessGeneratedContent) resultFromVideoStatus;
                             String url = SuccessObject.getOutput().get(0);
@@ -174,7 +179,11 @@ public class MediaService {
                      reVerifiedVideoIds.addAll(media.getPictures());
                      media.setPictures(reVerifiedVideoIds);
 
+                     System.out.println("Video IDs for url: " + reVerifiedVideoIds.size());
+
                     deleteRunwayGenerationByUserId(uid);
+
+                    System.out.println("Video IDs for url: delete" + reVerifiedVideoIds.size());
 
 //                   CompletableFuture<List<String>> completableFuture = getAllTheUrlsRunWayAndDeleteNode(String.valueOf(media.getVideoId()),uid);
 //                    List<String> resultNewUrls =  completableFuture.get();
