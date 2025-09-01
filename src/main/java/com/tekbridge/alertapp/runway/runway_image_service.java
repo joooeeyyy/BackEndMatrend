@@ -89,11 +89,20 @@ public class runway_image_service {
         System.out.println("RUNWAY Request JsonString is null End Block " + id);
         if (responseString.getStatusCode().is2xxSuccessful() && responseString.getBody() != null) {
             System.out.println("RUNWAY Request Started Success End Block " + id);
-            Map<String, String> responseMap = responseString.getBody();
+            Map<String, String> responseMap;
             Gson gson = new Gson(); // Gson instance
-            jsonString = gson.toJson(responseMap);
-            System.out.println("Converted JSON String (Gson): " + jsonString);
-            ObjectMapper objectMapper = new ObjectMapper();
+
+            ObjectMapper objectMapper = null;
+            try{
+                responseMap = responseString.getBody();
+                System.out.println(responseMap.get("id"));
+                jsonString = gson.toJson(responseMap);
+                System.out.println("Converted JSON String (Gson): " + jsonString);
+                objectMapper = new ObjectMapper();
+            }catch (Exception e){
+                System.out.println("RUNWAY Request Started Failure End Block " + id +e.getMessage());
+            }
+
             // If your mapResponse is already a Map<String, Object> from some other process
             // Map<String, Object> mapResponse = ... ;
             // MyResponseObject myObject = objectMapper.convertValue(mapResponse, MyResponseObject.class);

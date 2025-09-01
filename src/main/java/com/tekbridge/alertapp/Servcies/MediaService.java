@@ -52,56 +52,56 @@ public class MediaService {
         }
         updatedList.add(media.toMap()); // fallback if not found
     }
-
-    CompletableFuture<List<String>> getAllTheUrlsRunWayAndDeleteNode(String videoNode,String userId) throws JsonProcessingException {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("runway_generation").child(userId).child(videoNode);
-        CompletableFuture<List<String>> future = new CompletableFuture<>();
-        databaseReference.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                List<String> currentList = null;
-                Object rawValue = mutableData.getValue();
-                if(rawValue == null){
-                    currentList = new ArrayList<>();
-                }else if(rawValue instanceof List){
-                    currentList = new ArrayList<>();
-                    try {
-                        for (Object item : (List<Object>) rawValue) {
-                            if(item instanceof String){
-                                Object resultFromVideoStatus = runwayImageService.getIdRunwayAndVerify(item.toString());
-                                if(resultFromVideoStatus instanceof SuccessPendingGeneration) {
-                                    currentList.add(((SuccessPendingGeneration) resultFromVideoStatus).getId());
-                                }
-
-                                if(resultFromVideoStatus instanceof SuccessGeneratedContent) {
-                                    currentList.add(((SuccessGeneratedContent) resultFromVideoStatus).getOutput().get(0));
-                                }
-                            }
-                        }
-                    }catch (Exception ignored){
-                        System.out.println(ignored.getMessage());
-
-                    }
-                }
-                mutableData.setValue(currentList);
-                future.complete(currentList);
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-                if (databaseError != null) {
-                    // logger.error("Firebase transaction failed for path '{}': {}", nodePath, databaseError.getMessage());
-                    future.completeExceptionally(databaseError.toException());
-                } else if (!b) {
-                    // This can happen due to contention if retries are exhausted.
-                    //logger.warn("Firebase transaction for path '{}' was not committed. The data may not have been updated.", nodePath);
-                    future.completeExceptionally(new RuntimeException("Transaction not committed for path: " ));
-                }
-            }
-        });
-        return  future;
-    };
+//
+//    CompletableFuture<List<String>> getAllTheUrlsRunWayAndDeleteNode(String videoNode,String userId) throws JsonProcessingException {
+//        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("runway_generation").child(userId).child(videoNode);
+//        CompletableFuture<List<String>> future = new CompletableFuture<>();
+//        databaseReference.runTransaction(new Transaction.Handler() {
+//            @Override
+//            public Transaction.Result doTransaction(MutableData mutableData) {
+//                List<String> currentList = null;
+//                Object rawValue = mutableData.getValue();
+//                if(rawValue == null){
+//                    currentList = new ArrayList<>();
+//                }else if(rawValue instanceof List){
+//                    currentList = new ArrayList<>();
+//                    try {
+//                        for (Object item : (List<Object>) rawValue) {
+//                            if(item instanceof String){
+//                                Object resultFromVideoStatus = runwayImageService.getIdRunwayAndVerify(item.toString());
+//                                if(resultFromVideoStatus instanceof SuccessPendingGeneration) {
+//                                    currentList.add(((SuccessPendingGeneration) resultFromVideoStatus).getId());
+//                                }
+//
+//                                if(resultFromVideoStatus instanceof SuccessGeneratedContent) {
+//                                    currentList.add(((SuccessGeneratedContent) resultFromVideoStatus).getOutput().get(0));
+//                                }
+//                            }
+//                        }
+//                    }catch (Exception ignored){
+//                        System.out.println(ignored.getMessage());
+//
+//                    }
+//                }
+//                mutableData.setValue(currentList);
+//                future.complete(currentList);
+//                return Transaction.success(mutableData);
+//            }
+//
+//            @Override
+//            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+//                if (databaseError != null) {
+//                    // logger.error("Firebase transaction failed for path '{}': {}", nodePath, databaseError.getMessage());
+//                    future.completeExceptionally(databaseError.toException());
+//                } else if (!b) {
+//                    // This can happen due to contention if retries are exhausted.
+//                    //logger.warn("Firebase transaction for path '{}' was not committed. The data may not have been updated.", nodePath);
+//                    future.completeExceptionally(new RuntimeException("Transaction not committed for path: " ));
+//                }
+//            }
+//        });
+//        return  future;
+//    };
 
 
     public void deleteRunwayGenerationByUserId(String userId) throws ExecutionException, InterruptedException {
