@@ -74,8 +74,7 @@ public class runway_image_service {
 
         System.out.println("RUNWAY Request Started End Block " + id);
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUri(URI.create("https://api.dev.runwayml.com/v1/tasks"))
-                .queryParam("id",id);
+                .fromUri(URI.create("https://api.dev.runwayml.com/v1/tasks/"+id));
         System.out.println("RUNWAY Request Started End Block two" + id);
         String apiUrlWithParams = builder.toUriString(); //
         System.out.println("RUNWAY Request Started End Block three" + id);
