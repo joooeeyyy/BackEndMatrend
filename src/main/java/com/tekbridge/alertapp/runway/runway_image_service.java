@@ -72,6 +72,7 @@ public class runway_image_service {
 
     public Object getIdRunwayAndVerify(String id) throws JsonProcessingException {
 
+        System.out.println("RUNWAY Request Started End Block " + id);
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUri(URI.create("https://api.dev.runwayml.com/v1/tasks"))
                 .queryParam("id", id);
@@ -85,7 +86,9 @@ public class runway_image_service {
                 }
         );
         String jsonString = null;
+        System.out.println("RUNWAY Request JsonString is null End Block " + id);
         if (responseString.getStatusCode().is2xxSuccessful() && responseString.getBody() != null) {
+            System.out.println("RUNWAY Request Started Success End Block " + id);
             Map<String, String> responseMap = responseString.getBody();
             Gson gson = new Gson(); // Gson instance
             jsonString = gson.toJson(responseMap);

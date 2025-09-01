@@ -105,8 +105,8 @@ public class MediaService {
 
 
     public void deleteRunwayGenerationByUserId(String userId) throws ExecutionException, InterruptedException {
+        System.out.println("Deleting runway generation by userId: " + userId);
         Firestore db = FirestoreClient.getFirestore();
-
         // Get a reference to the specific document using the userId as the document ID
         DocumentReference userDocRef = db.collection("runway_generations").document(userId);
 
@@ -157,6 +157,7 @@ public class MediaService {
                     Object resultFromVideoStatus;
 
                     for(String videoId : videoIdsForUrl){
+                        System.out.println("Video ID: For loop " + videoId);
                         resultFromVideoStatus = runwayImageService.getIdRunwayAndVerify(videoId);
                         System.out.println("Video ID: " + videoId + " resultFromVideoStatus: " + resultFromVideoStatus);
                         if (resultFromVideoStatus instanceof SuccessPendingGeneration) {
