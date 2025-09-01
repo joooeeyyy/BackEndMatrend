@@ -76,8 +76,11 @@ public class runway_image_service {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUri(URI.create("https://api.dev.runwayml.com/v1/tasks"))
                 .queryParam("id", id);
+        System.out.println("RUNWAY Request Started End Block two" + id);
         String apiUrlWithParams = builder.toUriString(); //
+        System.out.println("RUNWAY Request Started End Block three" + id);
         HttpEntity<Object> requestEntity = new HttpEntity<>(httpHeaders);
+        System.out.println("RUNWAY Request Started End Block four" + id);
         ResponseEntity<Map<String, String>> responseString = restTemplate.exchange(
                 apiUrlWithParams,
                 HttpMethod.GET,
@@ -85,6 +88,7 @@ public class runway_image_service {
                 new ParameterizedTypeReference<Map<String, String>>() {
                 }
         );
+        System.out.println("RUNWAY Request Started End Block four" + responseString.getBody());
         String jsonString = null;
         System.out.println("RUNWAY Request JsonString is null End Block " + id);
         if (responseString.getStatusCode().is2xxSuccessful() && responseString.getBody() != null) {
