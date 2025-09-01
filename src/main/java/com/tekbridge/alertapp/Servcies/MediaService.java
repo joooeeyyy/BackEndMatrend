@@ -1,12 +1,12 @@
 package com.tekbridge.alertapp.Servcies;
 
-import java.util.Optional;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.*;
+import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.database.*;
+import com.google.firebase.database.Transaction;
 import com.tekbridge.alertapp.Firebase.MediaDisplay;
 import com.tekbridge.alertapp.Models.VideoStatus;
 import com.tekbridge.alertapp.Models.runway.SuccessGeneratedContent;
@@ -18,17 +18,9 @@ import org.springframework.stereotype.Service;
 import java.lang.InterruptedException;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-
-import java.util.HashMap;
-
-import com.google.cloud.firestore.QuerySnapshot;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -112,6 +104,25 @@ public class MediaService {
     };
 
 
+    public void deleteRunwayGenerationByUserId(String userId) throws ExecutionException, InterruptedException {
+        Firestore db = FirestoreClient.getFirestore();
+
+        // Get a reference to the specific document using the userId as the document ID
+        DocumentReference userDocRef = db.collection("runway_generations").document(userId);
+
+        // Asynchronously delete the document
+        ApiFuture<WriteResult> deleteFuture = userDocRef.delete();
+
+        // Optionally, block and wait for the delete operation to complete
+        // This is useful if you need to ensure the deletion happened before proceeding
+        WriteResult result = deleteFuture.get();
+
+        System.out.println("Document with ID '" + userId + "' deleted successfully at: " + result.getUpdateTime());
+        // You can also check if the document existed before deletion,
+        // though delete() itself doesn't fail if the document doesn't exist.
+        // If you need to confirm it existed, you'd typically do a get() before delete().
+    }
+
 
     public void refreshMediaStatuses(String userFcmToken, String uid) throws Exception {
         DocumentReference userDoc = firestore.collection("users").document(uid);
@@ -138,7 +149,34 @@ public class MediaService {
                 if ("completed".equals(updatedStatus.getStatus())) {
 
                     //TODO : When status is completed then get all the url from videoId node and add it to the media nodd, delete that video node
-//                    CompletableFuture<List<String>> completableFuture = getAllTheUrlsRunWayAndDeleteNode(String.valueOf(media.getVideoId()),uid);
+                    List<String> videoIdsForUrl = getVideoIdsForUser(uid);
+                    List<String> reVerifiedVideoIds = new ArrayList<>();
+
+                    Object resultFromVideoStatus;
+
+                    for(String videoId : videoIdsForUrl){
+                        resultFromVideoStatus = runwayImageService.getIdRunwayAndVerify(videoId);
+                        if (resultFromVideoStatus instanceof SuccessPendingGeneration) {
+                            // myObject is an instance of SuccessPendingGeneration
+                            SuccessPendingGeneration PendingObject = (SuccessPendingGeneration) resultFromVideoStatus;
+                            // Now you can safely use methods specific to SuccessPendingGeneration
+                            String id = PendingObject.getId();
+                            reVerifiedVideoIds.add(id);
+                        } else if (resultFromVideoStatus instanceof SuccessGeneratedContent) {
+                            // myObject is an instance of AnotherObjectType
+                            SuccessGeneratedContent SuccessObject = (SuccessGeneratedContent) resultFromVideoStatus;
+                            String url = SuccessObject.getOutput().get(0);
+                            reVerifiedVideoIds.add(url);
+                            // Now you can safely use methods specific to AnotherObjectType
+                        }
+                    }
+
+                     reVerifiedVideoIds.addAll(media.getPictures());
+                     media.setPictures(reVerifiedVideoIds);
+
+                    deleteRunwayGenerationByUserId(uid);
+
+//                   CompletableFuture<List<String>> completableFuture = getAllTheUrlsRunWayAndDeleteNode(String.valueOf(media.getVideoId()),uid);
 //                    List<String> resultNewUrls =  completableFuture.get();
 //                    media.getPictures().addAll(resultNewUrls);
 //
@@ -322,6 +360,51 @@ public class MediaService {
         return Optional.empty();
     }
 
+
+    public List<String> getVideoIdsForUser(String userId) {
+        Firestore db = FirestoreClient.getFirestore();
+        // Get a reference to the user's document
+        DocumentReference userDocRef = db.collection("runway_generations").document(userId);
+
+        // Asynchronously retrieve the document
+        ApiFuture<DocumentSnapshot> future = userDocRef.get();
+
+        try {
+            // Block and get the document snapshot
+            DocumentSnapshot document = future.get();
+
+            if (document.exists()) {
+                // Get the 'video_ids' field from the document
+                // It's good practice to check the type and handle potential ClassCastException
+                Object videoIdsObject = document.get("video_ids");
+
+                if (videoIdsObject instanceof List) {
+                    // Firestore stores arrays as List<Object>. We need to cast carefully.
+                    @SuppressWarnings("unchecked") // Suppress warning as we've checked the instance type
+                    List<Object> rawVideoIds = (List<Object>) videoIdsObject;
+
+                    // Convert List<Object> to List<String>
+                    // This assumes all elements in the 'video_ids' array are indeed strings.
+                    // Add error handling if the elements might not be strings.
+                    return rawVideoIds.stream()
+                            .filter(String.class::isInstance)
+                            .map(String.class::cast)
+                            .toList();
+                } else {
+                    System.out.println("Field 'video_ids' is not an array for user: " + userId);
+                    return Collections.emptyList();
+                }
+            } else {
+                System.out.println("No such document for user: " + userId);
+                return Collections.emptyList();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            // Handle exceptions (e.g., network issues, permission errors)
+            System.err.println("Error fetching document: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Restore interruption status
+            return Collections.emptyList();
+        }
+    }
 
 }
 
