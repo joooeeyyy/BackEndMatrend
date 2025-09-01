@@ -80,7 +80,7 @@ public class runway_image_service {
         System.out.println("RUNWAY Request Started End Block three" + id);
         HttpEntity<Object> requestEntity = new HttpEntity<>(httpHeaders);
         System.out.println("RUNWAY Request Started End Block four" + id +" "+apiUrlWithParams);
-        ResponseEntity<Map<String, String>> responseString = null;
+        ResponseEntity<Map<String, Object>> responseString = null;
         try {
 
             ResponseEntity<String> rawResponse = restTemplate.exchange(
@@ -97,8 +97,7 @@ public class runway_image_service {
                     apiUrlWithParams,
                     HttpMethod.GET,
                     requestEntity,
-                    new ParameterizedTypeReference<Map<String, String>>() {
-                    }
+                     new ParameterizedTypeReference<Map<String, Object>>() {}
             );
             System.out.println("RUNWAY Request Started End Block four" + responseString.getBody());
         }catch (Exception e){
@@ -110,7 +109,7 @@ public class runway_image_service {
         System.out.println("RUNWAY Request JsonString is null End Block " + id);
         if (responseString.getStatusCode().is2xxSuccessful() && responseString.getBody() != null) {
             System.out.println("RUNWAY Request Started Success End Block " + id);
-            Map<String, String> responseMap;
+            Map<String, Object> responseMap;
             Gson gson = new Gson(); // Gson instance
 
             ObjectMapper objectMapper = null;
