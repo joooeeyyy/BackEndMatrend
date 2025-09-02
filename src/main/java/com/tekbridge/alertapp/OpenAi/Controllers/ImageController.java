@@ -218,6 +218,7 @@ public class ImageController {
         List<String> resultPictures = new ArrayList<>();
 
         String parsedPrompt = imageGenerationService.getDetailsFromImagePrompt(imagePromptUser);
+        String runWayPrompt = "I want you to design a flyer for my "+ imagePromptUser.getWhatYouDo() + " business , my business name is "+"'"+imagePromptUser.getNameOfCompany()+"'";
         String videoDescription = "My Business is " + imagePromptUser.getWhatYouDo() +
                 " business, Say the name " + imagePromptUser.getNameOfCompany() +
                 " in various part of the video, with pictures indicating my services";
@@ -268,14 +269,14 @@ public class ImageController {
 
         //TODO : This is where you start playing with runway api
             try{
-                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+                createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,runWayPrompt,imagePromptUser.getNameOfCompany());
             }catch (RuntimeException e){
                 System.out.println("RunWay Run Time Exception Caught "+e.getMessage());
                 createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
             }
-            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
-            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,parsedPrompt,imagePromptUser.getNameOfCompany());
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,runWayPrompt,imagePromptUser.getNameOfCompany());
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,runWayPrompt,imagePromptUser.getNameOfCompany());
+            createNodeTriggerRunwayGeneration(String.valueOf(videoId),uid,runWayPrompt,imagePromptUser.getNameOfCompany());
         //After the video id is generated , create a node - user-videoID-[List of strings , if pending put id , if not put string url]
         //TODO : Later on when the video is generated get all the urls from here and add it to the mediaNode , then delete the node here
         //Check Media Service for the second todo
