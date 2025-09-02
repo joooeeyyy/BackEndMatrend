@@ -162,18 +162,21 @@ public class MediaService {
                         System.out.println("Video ID: " + videoId + " resultFromVideoStatus: " + resultFromVideoStatus);
                         if (resultFromVideoStatus instanceof SuccessGeneratedContent ) {
                             System.out.println("Video status updated successfully.success");
-                            // myObject is an instance of SuccessPendingGeneration
-                            SuccessPendingGeneration PendingObject = (SuccessPendingGeneration) resultFromVideoStatus;
-                            // Now you can safely use methods specific to SuccessPendingGeneration
-                            String id = PendingObject.getId();
-                            reVerifiedVideoIds.add(id);
-                        } else if (resultFromVideoStatus instanceof SuccessPendingGeneration) {
-                            System.out.println("Video status updated successfully. failed");
                             // myObject is an instance of AnotherObjectType
                             SuccessGeneratedContent SuccessObject = (SuccessGeneratedContent) resultFromVideoStatus;
                             String url = SuccessObject.getOutput().get(0);
                             reVerifiedVideoIds.add(url);
                             // Now you can safely use methods specific to AnotherObjectType
+                        } else if (resultFromVideoStatus instanceof SuccessPendingGeneration) {
+                            System.out.println("Video status updated successfully. failed");
+
+                            // myObject is an instance of SuccessPendingGeneration
+                            SuccessPendingGeneration PendingObject = (SuccessPendingGeneration) resultFromVideoStatus;
+                            // Now you can safely use methods specific to SuccessPendingGeneration
+                            String id = PendingObject.getId();
+                            reVerifiedVideoIds.add(id);
+
+
                         }
                     }
 
