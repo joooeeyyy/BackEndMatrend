@@ -129,18 +129,6 @@ public class runway_image_service {
 
             // If your response is a JSON String
             try {
-                SuccessPendingGeneration myObject = objectMapper.readValue(jsonString, SuccessPendingGeneration.class);
-
-                System.out.println("Converted Java Object: " + myObject);
-                System.out.println("ID: " + myObject.getId());
-                System.out.println("Progress: " + myObject.getProgress());
-                return  myObject;
-            }catch (JsonProcessingException e){
-                System.out.println("Error: SuccessPendingGeneration " + e.getMessage());
-
-            }
-
-            try {
                 SuccessGeneratedContent objectSuccess = objectMapper.readValue(jsonString, SuccessGeneratedContent.class);
                 System.out.println("Converted Java Object: " + objectSuccess);
                 System.out.println("ID: " + objectSuccess.getId());
@@ -150,6 +138,20 @@ public class runway_image_service {
                 return null;
 
             }
+
+//            try {
+//                SuccessPendingGeneration myObject = objectMapper.readValue(jsonString, SuccessPendingGeneration.class);
+//
+//                System.out.println("Converted Java Object: " + myObject);
+//                System.out.println("ID: " + myObject.getId());
+//                System.out.println("Progress: " + myObject.getProgress());
+//                return  myObject;
+//            }catch (JsonProcessingException e){
+//                System.out.println("Error: SuccessPendingGeneration " + e.getMessage());
+//
+//            }
+
+
 
         } else {
             System.err.println("Request failed or body is null. Status: " + responseString.getStatusCode());
